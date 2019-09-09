@@ -1,4 +1,5 @@
 .vscode/
-bin/
-out/
-*.exe
+chess/bin/
+chess/out/
+chess/lib/
+

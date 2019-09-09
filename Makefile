@@ -1,103 +1,76 @@
-# Please tweak the following variable definitions as needed by your
-# project, except GTEST_HEADERS, which you can use in your own targets
-# but shouldn't modify.
+# -----------------
+# >>>> MODULES <<<<
+# -----------------
+CHESS_ROOT = ./chess
+CHESS_BIN = $(CHESS_ROOT)/bin
+CHESS_HDR = $(CHESS_ROOT)/include
+CHESS_LIB = $(CHESS_ROOT)/lib
+CHESS_OBJ = $(CHESS_ROOT)/out
+CHESS_TST = $(CHESS_ROOT)/test
 
-# Points to the root of Google Test, relative to where this file is. (inner /googletest)
-# Remember to tweak this if you move this file.
-GTEST_DIR = ./googletest/googletest
+# ----------------------
+# >>>> DEPENDENCIES <<<<
+# ----------------------
+GTEST_ROOT = $(CHESS_LIB)/googletest
+GTEST_HDR = $(GTEST_ROOT)/include
+GTEST_LIB = $(GTEST_ROOT)/lib
+GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
+             $(GTEST_LIB)/libgtest_main.a \
+             $(GTEST_LIB)/libgmock.a      \
+             $(GTEST_LIB)/libgmock_main.a
 
-# Points to the location of the Google Test libraries. (.a files)
-GTEST_LIB_DIR = ./out/gtest
+# -----------------------------
+# >>>> COMPILER PROPERTIES <<<<
+# -----------------------------
+CXX = g++
+CPPFLAGE = -isystem $(GTEST_HDR)
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11
 
-# Where to find user code. (root)
-USER_DIR = .
+# -------------------------
+# >>>> TARGET BINARIES <<<<
+# -------------------------
+TESTS = $(CHESS_BIN)/moveTest        \
+        $(CHESS_BIN)/boardTest       \
+        $(CHESS_BIN)/movegenTest     \
 
-# Flags passed to the preprocessor.
-# Set Google Test's header directory as a system directory, such that
-# the compiler doesn't generate warnings in Google Test headers.
-CPPFLAGS += -isystem $(GTEST_DIR)/include
+all: $(TESTS)
 
-# Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -pthread -std=c++11
+.PHONY: clean
 
-# Google Test libraries
-GTEST_LIBS = out/gtest/libgtest.a out/gtest/libgtest_main.a
+clean:
+	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/test/*.o
 
-# All tests produced by this Makefile.  Remember to add new tests you
-# created to the list.
-TESTS = bin/testMove bin/testBoard bin/testMoveGen
+# -----------------
+# >>>> RECIPES <<<<
+# -----------------
 
-# All Google Test headers.  Usually you shouldn't change this
-# definition.
-GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
-                $(GTEST_DIR)/include/gtest/internal/*.h
+$(CHESS_OBJ)/src/parseutils.o: $(CHESS_ROOT)/src/parseutils.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c $(CHESS_ROOT)/src/parseutils.cpp -o $@
 
-# House-keeping build targets.
+$(CHESS_OBJ)/src/move.o: $(CHESS_ROOT)/src/move.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c $(CHESS_ROOT)/src/move.cpp -o $@
 
-all : $(GTEST_LIBS) $(TESTS)
+$(CHESS_OBJ)/src/board.o: $(CHESS_ROOT)/src/board.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c $(CHESS_ROOT)/src/board.cpp -o $@
 
-clean :
-	rm -f $(GTEST_LIBS) $(TESTS) bin/* out/game/*.o out/test/*.o out/gtest/*.o
+$(CHESS_OBJ)/src/movegen.o: $(CHESS_ROOT)/src/movegen.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c $(CHESS_ROOT)/src/movegen.cpp -o $@
 
-# Builds gtest.a and gtest_main.a.
+$(CHESS_OBJ)/test/boardTest.o: $(CHESS_ROOT)/test/boardTest.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c $(CHESS_ROOT)/test/boardTest.cpp -o $@
 
-# Usually you shouldn't tweak such internal variables, indicated by a
-# trailing _.
-GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
+$(CHESS_OBJ)/test/moveTest.o: $(CHESS_ROOT)/test/moveTest.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c $(CHESS_ROOT)/test/moveTest.cpp -o $@
 
-# For simplicity and to avoid depending on Google Test's
-# implementation details, the dependencies specified below are
-# conservative and not optimized.  This is fine as Google Test
-# compiles fast and for ordinary users its source rarely changes.
-out/gtest/gtest-all.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
-            $(GTEST_DIR)/src/gtest-all.cc -o $@
+$(CHESS_OBJ)/test/movegenTest.o: $(CHESS_ROOT)/test/movegenTest.cpp $(CHESS_HDR)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c $(CHESS_ROOT)/test/movegenTest.cpp -o $@
 
-out/gtest/gtest_main.o : $(GTEST_SRCS_)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
-            $(GTEST_DIR)/src/gtest_main.cc -o $@
+$(CHESS_BIN)/moveTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/test/moveTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-out/gtest/libgtest.a : out/gtest/gtest-all.o
-	$(AR) $(ARFLAGS) $@ $^
+$(CHESS_BIN)/boardTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/test/boardTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-out/gtest/libgtest_main.a : out/gtest/gtest-all.o out/gtest/gtest_main.o
-	$(AR) $(ARFLAGS) $@ $^
+$(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# Builds a sample test.  A test should link with either gtest.a or
-# gtest_main.a, depending on whether it defines its own main()
-# function.
-
-USER_HEADERS = $(USER_DIR)/game/defs.h \
-               $(USER_DIR)/game/parseutils.h \
-               $(USER_DIR)/game/move.h \
-               $(USER_DIR)/game/board.h
-
-out/game/parseutils.o: $(USER_DIR)/game/parseutils.cpp $(USER_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/game/parseutils.cpp -o $@
-
-out/game/move.o: $(USER_DIR)/game/move.cpp $(USER_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/game/move.cpp -o $@
-
-out/game/board.o: $(USER_DIR)/game/board.cpp $(USER_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/game/board.cpp -o $@
-
-out/game/movegen.o: $(USER_DIR)/game/movegen.cpp $(USER_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/game/movegen.cpp -o $@
-
-out/test/testBoard.o: $(USER_DIR)/test/testBoard.cpp $(USER_HEADERS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/test/testBoard.cpp -o $@
-
-out/test/testMove.o: $(USER_DIR)/test/testMove.cpp $(USER_HEADERS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/test/testMove.cpp -o $@
-
-out/test/testMoveGen.o: $(USER_DIR)/test/testMoveGen.cpp $(USER_HEADERS) $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/test/testMoveGen.cpp -o $@
-
-bin/testMove: out/game/parseutils.o out/game/move.o out/test/testMove.o $(GTEST_LIBS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L$(GTEST_LIB_DIR) -lgtest_main -lpthread $^ -o $@
-
-bin/testBoard: out/game/parseutils.o out/game/move.o out/game/board.o out/test/testBoard.o $(GTEST_LIBS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L$(GTEST_LIB_DIR) -lgtest_main -lpthread $^ -o $@
-
-bin/testMoveGen: out/game/parseutils.o out/game/move.o out/game/board.o out/game/movegen.o out/test/testMoveGen.o $(GTEST_LIBS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L$(GTEST_LIB_DIR) -lgtest_main -lpthread $^ -o $@
