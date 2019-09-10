@@ -7,9 +7,13 @@ This is a bitboard-based chess engine written in C++. The API is intended to be 
 ### Build Requirements
 
 A Unix shell
+
 Git
+
 CMake 3.15.3+
+
 GNU Make 3.81+
+
 GCC with support for C++11
 
 ### Build Instructions
