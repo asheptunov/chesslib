@@ -52,7 +52,7 @@ Board::Board(const char *fen) {
 }
 
 Board::Board(const Board &other) {
-    memcpy(&this->ranks_, &other.ranks_, sizeof(int32_t) << 3);
+    memcpy(&this->ranks_, &other.ranks_, sizeof(int32_t) * 8);
     this->flags_ = other.flags_;
 }
 
@@ -67,17 +67,17 @@ Board &Board::operator=(const Board &other) {
 void Board::applyMove(const Move &move) {
     // KILL VICTIM
     if (move.isCapture()) {
-        int k_rk = move.killpos_ >> 3;
-        int k_offs = move.killpos_ & 7;
+        int k_rk = move.killpos_ / 8;
+        int k_offs = move.killpos_ % 8;
         ZEROPOS(k_offs, ranks_[k_rk]);
         SETPOS(k_offs, ranks_[k_rk], NOPC);
     }
 
     // MOVE PIECE
-    int f_rk = move.frompos_ >> 3;  // pos / 8
-    int t_rk = move.topos_ >> 3;
-    int f_offs = move.frompos_ & 7;  // pos % 8
-    int t_offs = move.topos_ & 7;
+    int f_rk = move.frompos_ / 8;
+    int t_rk = move.topos_ / 8;
+    int f_offs = move.frompos_ % 8;
+    int t_offs = move.topos_ % 8;
     MOVEPC(f_offs, t_offs, ranks_[f_rk], ranks_[t_rk], move.topc_);
 
     // MOVE ROOK IF CASTLE
@@ -115,7 +115,7 @@ void Board::applyMove(const Move &move) {
     SETEP(NOPOS, flags_);
     if ((move.frompc_ == WPAWN || move.frompc_ == BPAWN) \
         && (abs(move.topos_ - move.frompos_) == 16)) {
-        SETEP((move.frompos_ + move.topos_) >> 1, flags_);
+        SETEP((move.frompos_ + move.topos_) / 2, flags_);
     }
 
     // FLIP PLAYERS
@@ -136,7 +136,7 @@ string Board::toFen() const {
         blanks = 0;
         rank = this->ranks_[rk - 1];
         for (int offs = 'a'; offs <= 'h'; ++offs) {
-            int pc = rank & 0xf;  // one byte / pc at a time
+            int pc = rank & 0xf;  // one nibble / pc at a time
             if (pc == NOPC) {
                 ++blanks;
             } else {

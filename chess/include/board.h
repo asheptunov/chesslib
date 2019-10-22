@@ -81,6 +81,16 @@ class Board {
 //    private:
     uint32_t ranks_[8];
     uint16_t flags_;
+
+   private:
+    void generatePawnMoves(vector<Move> *dest, int rk, int offs) const;
+    void generateKnightMoves(vector<Move> *dest, int rk, int offs) const;
+    void generateBishopMoves(vector<Move> *dest, int rk, int offs) const;
+    void generateRookMoves(vector<Move> *dest, int rk, int offs) const;
+    void generateQueenMoves(vector<Move> *dest, int rk, int offs) const;
+    void generateKingMoves(vector<Move> *dest, int rk, int offs) const;
+
+    // bool inCheck(int rk, int offs, )
 };
 
 }  // namespace game
