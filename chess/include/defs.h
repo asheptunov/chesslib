@@ -93,6 +93,8 @@ typedef uint8_t pc_t;
 
 // checks if a pos is within the board
 #define IS_POS(x) (((x >= A1) && (x <= H8)))
+// same as IS_POS but uses rank in 0-7 and offs in 0-7
+#define ISPOS2(rk, offs) ((rk >= 1 && rk <= 8) && (offs >= 'a' && offs <= 'h'))
 
 #define STARTING_BOARD "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
 
