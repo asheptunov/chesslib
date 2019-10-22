@@ -39,7 +39,9 @@ vector<Move> Board::generateMoves() const {
     vector<Move> ret;
 
     pos_t kingpos = NOPOS;  // this should be set by the end, or we are in an invalid state
-    int player = !(flags_ & PLAYER);
+    const int player = !(flags_ & PLAYER);
+    // !player gives current player as WPLAYER or BPLAYER
+    // player gives opponent as WPLAYER or BPLAYER
 
     uint32_t rank;
     // iterate A8 -> H1
@@ -88,15 +90,16 @@ vector<Move> Board::generateMoves() const {
 
     assert(kingpos != NOPOS);
 
-    // TODO:
-    // allocate Board array of equal size ret.size()
-    // initialize each Board as a copy of this
-    //
-    // for all generated moves
-    //   find the king
-    //   if the king is in check
-    //     remove the move from ret
+    Board future;
+    const pc_t king = !player ? WKING : BKING;
 
+    auto end = std::remove_if(ret.begin(), ret.end(), [&future, player, king, kingpos](const Move &mv) {
+        future.applyMove(mv);
+        pos_t kingpos2 = (mv.frompc_ == king) ? mv.topos_ : kingpos;
+        return future.hit(kingpos2 / 8, kingpos2 % 8, player);  // remove if king in check
+    });
+
+    ret.erase(end, ret.end());
     return ret;
 }
 
