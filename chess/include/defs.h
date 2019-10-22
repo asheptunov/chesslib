@@ -39,6 +39,8 @@ typedef uint8_t pc_t;
 
 // pos('a', 1) is 0, pos('b', 2) is 9, etc.
 #define POS(offs, rank) ((((rank) - 1) << 3) + ((offs) - 'a'))
+// same as POS but takes offs in 0-7 and rank in 0-7
+#define POS2(offs, rank) (((rank) << 3) + (offs))
 // also pos('a', 9)
 #define NOPOS 64
 
@@ -94,7 +96,7 @@ typedef uint8_t pc_t;
 // checks if a pos is within the board
 #define IS_POS(x) (((x >= A1) && (x <= H8)))
 // same as IS_POS but uses rank in 0-7 and offs in 0-7
-#define ISPOS2(rk, offs) ((rk >= 1 && rk <= 8) && (offs >= 'a' && offs <= 'h'))
+#define ISPOS2(rk, offs) ((rk >= 0 && rk < 8) && (offs >= 0 && offs < 8))
 
 #define STARTING_BOARD "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
 

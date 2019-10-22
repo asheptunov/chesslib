@@ -53,12 +53,13 @@ TEST(TestBoardMoveGen, MoveList) {
       for (unsigned int i = 0; i < actual.size(); ++i) {
          m1 = &actual[i];
          m2 = &expect[i];
-         EXPECT_EQ(m1->frompos_, m2->frompos_);
-         EXPECT_EQ(m1->frompc_, m2->frompc_);
-         EXPECT_EQ(m1->topos_, m2->topos_);
-         EXPECT_EQ(m1->topc_, m2->topc_);
-         EXPECT_EQ(m1->killpos_, m2->killpos_);
-         EXPECT_EQ(m1->killpc_, m2->killpc_);
+         EXPECT_EQ(strcmp(m1->algNot().c_str(), m2->algNot().c_str()), 0) << "move diff got " << m1->algNot() << " but expected " << m2->algNot();
+         // EXPECT_EQ(m1->frompos_, m2->frompos_);
+         // EXPECT_EQ(m1->frompc_, m2->frompc_);
+         // EXPECT_EQ(m1->topos_, m2->topos_);
+         // EXPECT_EQ(m1->topc_, m2->topc_);
+         // EXPECT_EQ(m1->killpos_, m2->killpos_);
+         // EXPECT_EQ(m1->killpc_, m2->killpc_);
       }
    }
 }
