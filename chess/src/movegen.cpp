@@ -44,6 +44,7 @@ vector<Move> Board::generateMoves() const {
     vector<Move> ret;
 
     pos_t kingpos = NOPOS;  // this should be set by the end, or we are in an invalid state
+    int player = !(flags_ & PLAYER);
 
     uint32_t rank;
     // iterate A8 -> H1
@@ -51,7 +52,7 @@ vector<Move> Board::generateMoves() const {
         rank = this->ranks_[rk];
         for (int offs = 0; offs < 8; ++offs) {  // a to h
             int pc = rank & 0xf;  // one nibble / pc at a time
-            if ((pc / 6) != !(flags_ & PLAYER)) {  // immobile color; continue
+            if ((pc / 6) != player) {  // immobile color; continue
                 rank >>= 4;
                 continue;
             }
@@ -80,7 +81,7 @@ vector<Move> Board::generateMoves() const {
                 break;
             case WKING:
             case BKING:
-                kingpos = POS(offs, rk);
+                kingpos = POS2(offs, rk);
                 this->generateKingMoves(&ret, rk, offs);
                 break;
             default:
@@ -91,6 +92,15 @@ vector<Move> Board::generateMoves() const {
     }
 
     assert(kingpos != NOPOS);
+
+    // TODO:
+    // allocate Board array of equal size ret.size()
+    // initialize each Board as a copy of this
+    //
+    // for all generated moves
+    //   find the king
+    //   if the king is in check
+    //     remove the move from ret
 
     return ret;
 }
@@ -104,18 +114,18 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk + 1] >> (offs * 4)) & 0xf) == NOPC)) {
             if (rk + 1 < 7) {
                 // add single up move (WPAWN topc)
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+1), NOPOS, WPAWN, WPAWN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WPAWN, NOPC));
             } else {  // topc is promotion
                 // add PROMOTION up moves
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+1), NOPOS, WPAWN, WKNIGHT, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+1), NOPOS, WPAWN, WBISHOP, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+1), NOPOS, WPAWN, WROOK, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+1), NOPOS, WPAWN, WQUEEN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WKNIGHT, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WBISHOP, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WROOK, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WQUEEN, NOPC));
             }
             if (ISPOS2(rk + 2, offs)
             && (((ranks_[rk + 2] >> (offs * 4)) & 0xf) == NOPC)) {
                 // add double up move
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk+2), NOPOS, WPAWN, WPAWN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk+2), NOPOS, WPAWN, WPAWN, NOPC));
             }
         }
 
@@ -125,13 +135,13 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
             if (killpc >= BPAWN && killpc <= BKING) {  // is black piece
                 if (rk + 1 < 7) {
                     // add up left diagonal take
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk+1), POS(offs-1, rk+1), WPAWN, WPAWN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WPAWN, killpc));
                 } else {  // killpos/topos is promotion
                     // add up left diagonal promotion take
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk+1), POS(offs-1, rk+1), WPAWN, WKNIGHT, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk+1), POS(offs-1, rk+1), WPAWN, WBISHOP, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk+1), POS(offs-1, rk+1), WPAWN, WROOK, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk+1), POS(offs-1, rk+1), WPAWN, WQUEEN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WKNIGHT, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WBISHOP, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WROOK, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WQUEEN, killpc));
                 }
             }
         }
@@ -140,13 +150,13 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
             if (killpc >= BPAWN && killpc <= BKING) {  // is black piece
                 if (rk + 1 < 7) {
                     // add up right diagonal take
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk+1), POS(offs+1,rk+1), WPAWN, WPAWN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WPAWN, killpc));
                 } else {  // killpos/topos is promotion
                     // add up right diagonal promotion take
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk+1), POS(offs+1,rk+1), WPAWN, WKNIGHT, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk+1), POS(offs+1,rk+1), WPAWN, WBISHOP, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk+1), POS(offs+1,rk+1), WPAWN, WROOK, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk+1), POS(offs+1,rk+1), WPAWN, WQUEEN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WKNIGHT, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WBISHOP, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WROOK, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WQUEEN, killpc));
                 }
             }
         }
@@ -154,9 +164,9 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         // EN PASSANT TAKES
         pos_t eppos = (flags_ >> 8) & 0xff;
         if (eppos != NOPOS
-        && (eppos == POS(offs - 1, rk + 1) || eppos == POS(offs + 1, rk + 1))) {
+        && (eppos == POS2(offs - 1, rk + 1) || eppos == POS2(offs + 1, rk + 1))) {
             // add ep up take
-            dest->push_back(Move(POS(offs, rk), eppos, eppos - 8, WPAWN, WPAWN, BPAWN));
+            dest->push_back(Move(POS2(offs, rk), eppos, eppos - 8, WPAWN, WPAWN, BPAWN));
         }
 
     } else {  // BLACK; moves go DOWN in rank
@@ -167,18 +177,18 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk - 1] >> (offs * 4)) & 0xf) == NOPC)) {
             if (rk - 1 > 0) {
                 // add single down move (BPAWN topc)
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-1), NOPOS, BPAWN, BPAWN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BPAWN, NOPC));
             } else {  // topc is promotion
                 // add PROMOTION down moves
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-1), NOPOS, BPAWN, BKNIGHT, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-1), NOPOS, BPAWN, BBISHOP, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-1), NOPOS, BPAWN, BROOK, NOPC));
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-1), NOPOS, BPAWN, BQUEEN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BKNIGHT, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BBISHOP, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BROOK, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BQUEEN, NOPC));
             }
             if (ISPOS2(rk - 2, offs)
             && (((ranks_[rk - 2] >> (offs * 4)) & 0xf) == NOPC)) {
                 // add double down move
-                dest->push_back(Move(POS(offs, rk), POS(offs, rk-2), NOPOS, BPAWN, BPAWN, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs, rk-2), NOPOS, BPAWN, BPAWN, NOPC));
             }
         }
 
@@ -188,12 +198,12 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
             if (killpc <= WKING) {  // is white piece
                 if (rk - 1 > 0) {
                     // add down left diagonal take
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk-1), POS(offs-1, rk-1), BPAWN, BPAWN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BPAWN, killpc));
                 } else {  // killpos/topos is promotion
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk-1), POS(offs-1, rk-1), BPAWN, BKNIGHT, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk-1), POS(offs-1, rk-1), BPAWN, BBISHOP, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk-1), POS(offs-1, rk-1), BPAWN, BROOK, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs-1, rk-1), POS(offs-1, rk-1), BPAWN, BQUEEN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BKNIGHT, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BBISHOP, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BROOK, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BQUEEN, killpc));
                 }
             }
         }
@@ -202,12 +212,12 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
             if (killpc <= WKING) {  // is white piece
                 if (rk - 1 > 0) {
                     // add down right diagonal take
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk-1), POS(offs+1, rk-1), BPAWN, BPAWN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BPAWN, killpc));
                 } else {  // killpos/topos is promotion
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk-1), POS(offs+1, rk-1), BPAWN, BKNIGHT, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk-1), POS(offs+1, rk-1), BPAWN, BBISHOP, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk-1), POS(offs+1, rk-1), BPAWN, BROOK, killpc));
-                    dest->push_back(Move(POS(offs, rk), POS(offs+1, rk-1), POS(offs+1, rk-1), BPAWN, BQUEEN, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BKNIGHT, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BBISHOP, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BROOK, killpc));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BQUEEN, killpc));
                 }
             }
         }
@@ -215,9 +225,9 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         // EN PASSANT TAKES
         pos_t eppos = (flags_ >> 8) & 0xff;
         if (eppos != NOPOS
-        && (eppos == POS(offs - 1, rk - 1) || eppos == POS(offs + 1, rk - 1))) {
+        && (eppos == POS2(offs - 1, rk - 1) || eppos == POS2(offs + 1, rk - 1))) {
             // add ep down take
-            dest->push_back(Move(POS(offs, rk), eppos, eppos + 8, BPAWN, BPAWN, WPAWN));
+            dest->push_back(Move(POS2(offs, rk), eppos, eppos + 8, BPAWN, BPAWN, WPAWN));
         }
     }
 }
@@ -232,10 +242,10 @@ void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
             killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xff;
             if (killpc == NOPC) {
                 // just a knight move
-                dest->push_back(Move(POS(offs, rk), POS(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
             } else if ((killpc / 6) != (frompc / 6)) {  // pc is different color
                 // knight capture
-                dest->push_back(Move(POS(offs, rk), POS(offs+mv[1], rk+mv[0]), POS(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
+                dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), POS2(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
             }
         }
     }
@@ -254,8 +264,76 @@ void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
 }
 
 void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
-    // check all immediate moves/takes
-    // check castling
+    pc_t killpc;
+    pc_t frompc = FLAGS_WPLAYER(flags_) ? WKING : BKING;
+
+    // NORMAL KING MOVES
+    vector<vector<int8_t>> &kingMoves = moves[WKING];
+    for (const vector<int8_t> &mv : kingMoves) {
+        if (ISPOS2(rk + mv[0], offs + mv[1])) {  // legal move
+            killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xff;
+            if (killpc == NOPC) {
+                // just a king move
+                dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
+            } else if ((killpc / 6) != (frompc / 6)) {  // pc is different color
+                // king capture
+                dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), POS2(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
+            }
+        }
+    }
+
+    // CASTLING MOVES
+    if (FLAGS_WPLAYER(flags_)) {  // white
+
+        if (FLAGS_WKCASTLE(flags_)  // white kingside
+        && (((ranks_[rk] >> ((offs+1) * 4)) & 0xf) == NOPC)  // f1 empty
+        && (((ranks_[rk] >> ((offs+2) * 4)) & 0xf) == NOPC)  // g1 empty
+        && !hit(rk, offs, false)       // king not in check
+        && !hit(rk, offs+1, false)     // f1 not hit
+        && !hit(rk, offs+2, false)) {  // g1 not hit
+            dest->push_back(Move(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
+        }
+
+        if (FLAGS_WQCASTLE(flags_)  // white queenside
+        && (((ranks_[rk] >> ((offs-1) * 4)) & 0xf) == NOPC)  // d1 empty
+        && (((ranks_[rk] >> ((offs-2) * 4)) & 0xf) == NOPC)  // c1 empty
+        && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b1 empty
+        && !hit(rk, offs, false)       // king not in check
+        && !hit(rk, offs-1, false)     // d1 not hit
+        && !hit(rk, offs-2, false)     // c1 not hit
+        && !hit(rk, offs-3, false)) {  // b1 not hit
+            dest->push_back(Move(POS2(offs, rk), POS2(offs-3, rk), NOPOS, frompc, frompc, NOPC));
+        }
+
+    } else {  // black
+
+        if (FLAGS_BKCASTLE(flags_)  // black kingside
+        && (((ranks_[rk] >> ((offs+1) * 4)) & 0xf) == NOPC)  // f8 empty
+        && (((ranks_[rk] >> ((offs+2) * 4)) & 0xf) == NOPC)  // g8 empty
+        && !hit(rk, offs, true)       // king not in check
+        && !hit(rk, offs+1, true)     // f8 not hit
+        && !hit(rk, offs+2, true)) {  // g8 not hit
+            dest->push_back(Move(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
+        }
+
+        if (FLAGS_BQCASTLE(flags_)  // black queenside
+        && (((ranks_[rk] >> ((offs-1) * 4)) & 0xf) == NOPC)  // d8 empty
+        && (((ranks_[rk] >> ((offs-2) * 4)) & 0xf) == NOPC)  // c8 empty
+        && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b8 empty
+        && !hit(rk, offs, true)       // king not in check
+        && !hit(rk, offs-1, true)     // d8 not hit
+        && !hit(rk, offs-2, true)     // c8 not hit
+        && !hit(rk, offs-3, true)) {  // b8 not hit
+            dest->push_back(Move(POS2(offs, rk), POS2(offs-3, rk), NOPOS, frompc, frompc, NOPC));
+        }
+    }
+}
+
+bool Board::hit(int rk, int offs, bool white) const {
+    // TODO:
+    // radiate outwards from pos, checking for other color pcs where they could be hitting from
+
+    return false;
 }
 
 } // namespace game
