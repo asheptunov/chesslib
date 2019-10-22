@@ -2,12 +2,14 @@
 
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 #include "defs.h"
 
 namespace game {
 
 using std::ostream;
+using std::string;
 
 class Move {
    public:
@@ -110,6 +112,13 @@ class Move {
      * @return true if this move is less than the other, false otherwise
      */
     bool operator<(const Move &other) const;
+
+    /**
+     * Returns the algebraic notation for this move.
+     * 
+     * @return the algebraic notation for this move
+     */
+    string algNot() const;
 
     /**
      * Prints a console representation of the given move to the given output

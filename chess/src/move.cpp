@@ -95,24 +95,30 @@ bool Move::operator<(const Move &other) const {
          || this->topos_ < other.topos_);
 }
 
-ostream &operator<<(ostream &os, const Move &move) {
-    // os << pieceToChar(move.frompc_);
-    switch (move.castleType()) {
+string Move::algNot() const {
+    string ret("");
+
+    // ret += pieceToChar(move.frompc_);
+    switch (this->castleType()) {
         case WKCASTLE:
         case BKCASTLE:
-            os << "0-0";
-            return os;
+            ret += "0-0";
+            return ret;
         case WQCASTLE:
         case BQCASTLE:
-            os << "0-0-0";
-            return os;
+            ret += "0-0-0";
+            return ret;
     }
-    os << posToStr(move.frompos_);
-    if (move.isCapture()) os << 'x';
-    os << posToStr(move.topos_);
-    if (move.isEnPassant()) os << "e.p.";
-    if (move.isPromotion()) os << pieceToChar(move.topc_);
-    return os;
+    ret += posToStr(this->frompos_);
+    if (this->isCapture()) ret += 'x';
+    ret += posToStr(this->topos_);
+    if (this->isEnPassant()) ret += "e.p.";
+    if (this->isPromotion()) ret += pieceToChar(this->topc_);
+    return ret;
+}
+
+ostream &operator<<(ostream &os, const Move &move) {
+    return os << move.algNot();
 }
 
 }  // namespace game
