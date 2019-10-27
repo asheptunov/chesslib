@@ -21,6 +21,7 @@ static map<vector<int>, vector<string>> rawCases =
     {{POS('b', 1), POS('c', 3), POS('c', 3), WKNIGHT, WKNIGHT, BBISHOP, true,    false,   false,   0       }, {"b1xc3",      "Nb1xbc3"}     },  // w cap
     {{POS('f', 6), POS('c', 3), NOPOS,       BBISHOP, BBISHOP, NOPC,    false,   false,   false,   0       }, {"f6c3",       "bf6c3"}       },  // b move
     {{POS('a', 5), POS('d', 5), POS('d', 5), BROOK,   BROOK,   WPAWN,   true,    false,   false,   0       }, {"a5xd5",      "ra5xPd5"}     },  // b cap
+    {{POS('b', 8), POS('c', 8), NOPOS,       BKING,   BKING,   NOPC,    false,   false,   false,   0       }, {"b8c8",       "kb8c8"}       },  // b k move
     {{POS('e', 1), POS('g', 1), NOPOS,       WKING,   WKING,   NOPC,    false,   false,   false,   WKCASTLE}, {"0-0",        "Ke1g1"}       },  // w k castle
     {{POS('e', 1), POS('c', 1), NOPOS,       WKING,   WKING,   NOPC,    false,   false,   false,   WQCASTLE}, {"0-0-0",      "Ke1c1"}       },  // w q castle
     {{POS('e', 8), POS('g', 8), NOPOS,       BKING,   BKING,   NOPC,    false,   false,   false,   BKCASTLE}, {"0-0",        "ke8g8"}       },  // b k castle
@@ -32,7 +33,7 @@ static map<vector<int>, vector<string>> rawCases =
     {{POS('d', 5), POS('e', 6), POS('e', 5), WPAWN,   WPAWN,   BPAWN,   true,    true,    false,   0       }, {"d5xe6e.p.",  "Pd5xpe6e.p."} },  // w ep cap
     {{POS('g', 4), POS('f', 3), POS('f', 4), BPAWN,   BPAWN,   WPAWN,   true,    true,    false,   0       }, {"g4xf3e.p.",  "pg4xPf3e.p."} }};  // b ep cap
 
-TEST(TestMove, ValConstruct) {
+TEST(MoveTest, ValConstruct) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m.frompos_, it->first[0]) << "diff at " << it->second[0];
@@ -44,7 +45,7 @@ TEST(TestMove, ValConstruct) {
     }
 }
 
-TEST(TestMove, AlgNotConstruct) {
+TEST(MoveTest, AlgNotConstruct) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m1(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         Move m2(it->second[1].c_str());
@@ -66,7 +67,7 @@ TEST(TestMove, AlgNotConstruct) {
     }
 }
 
-TEST(TestMove, Assign) {
+TEST(MoveTest, Assign) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m1(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         Move m2(NOPOS, NOPOS, NOPOS, NOPC, NOPC, NOPC);
@@ -80,39 +81,55 @@ TEST(TestMove, Assign) {
     }
 }
 
-TEST(TestMove, IsCapture) {
+TEST(MoveTest, IsCapture) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m.isCapture(), it->first[6]) << "diff at " << it->second[0];
     }
 }
 
-TEST(TestMove, IsEnPassant) {
+TEST(MoveTest, IsEnPassant) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m.isEnPassant(), it->first[7]) << "diff at " << it->second[0];
     }
 }
 
-TEST(TestMove, IsPromotion) {
+TEST(MoveTest, IsPromotion) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m.isPromotion(), it->first[8]) << "diff at " << it->second[0];
     }
 }
 
-TEST(TestMove, CastleType) {
+TEST(MoveTest, CastleType) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m.castleType(), it->first[9]) << "diff at " << it->second[0];
     }
 }
 
-TEST(TestMove, Print) {
+TEST(MoveTest, Print) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         std::ostringstream os;
         os << m;
         EXPECT_EQ(os.str(), it->second[0]) << "diff at " << it->second[0];
     }
+}
+
+TEST(MoveTest, LessThan) {
+    ASSERT_TRUE(Move("Ke1e2") < Move("ke1e2"));
+    ASSERT_FALSE(Move("ke1e2") < Move("Ke1e2"));
+
+    ASSERT_TRUE(Move("Qe1e2") < Move("Ke1e2"));
+    ASSERT_FALSE(Move("Ke1e2") < Move("Qe1e2"));
+
+    ASSERT_TRUE(Move("Pe2e3") < Move("Pe2e4"));
+    ASSERT_FALSE(Move("Pe2e4") < Move("Pe2e3"));
+
+    ASSERT_TRUE(Move("rb2b5") < Move("rb3b5"));
+    ASSERT_FALSE(Move("rb3b5") < Move("rb2b5"));
+
+    ASSERT_FALSE(Move("Na1b3") < Move("Na1b3"));
 }

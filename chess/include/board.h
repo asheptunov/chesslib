@@ -78,6 +78,17 @@ class Board {
      */
     friend ostream &operator<<(ostream &os, const Board &board);
 
+    /**
+     * Returns true if the specified position is hit by any piece of the given
+     * color, false otherwise. Takes rank in [0,7] corresponding to [1,8] and
+     * offset in [0,7] corresponding to ['a','h']. Hit means direct hit, not
+     * en passant takes. One should use this for seeing if a position is in check,
+     * so en passant takes would be irrelevant.
+     * 
+     * @return true if the position is hit, false otherwise
+     */
+    bool hit(int rk, int offs, bool white) const;
+
 //    private:
     uint32_t ranks_[8];
     uint16_t flags_;
@@ -89,17 +100,6 @@ class Board {
     void generateRookMoves(vector<Move> *dest, int rk, int offs) const;
     void generateQueenMoves(vector<Move> *dest, int rk, int offs) const;
     void generateKingMoves(vector<Move> *dest, int rk, int offs) const;
-
-    /**
-     * Returns true if the specified position is hit by any piece of the given
-     * color, false otherwise. Takes rank in [0,7] corresponding to [1,8] and
-     * offset in [0,7] corresponding to ['a','h']. Hit means direct hit, not
-     * en passant takes. One should use this for seeing if a position is in check,
-     * so en passant takes would be irrelevant.
-     * 
-     * @return true if the position is hit, false otherwise
-     */
-    bool hit(int rk, int offs, bool white) const;
 };
 
 }  // namespace game

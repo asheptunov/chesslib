@@ -99,7 +99,7 @@ static map<vector<string>, Move> applyPromotionCases =
     {{"8/8/8/8/8/8/5p2/8 b q h3", "8/8/8/8/8/8/8/5b2 w q -"}, Move(POS('f', 2), POS('f', 1), NOPOS, BPAWN, BBISHOP, NOPC)},
     {{"8/8/8/8/8/8/p7/8 b - -", "8/8/8/8/8/8/8/n7 w - -"}, Move(POS('a', 2), POS('a', 1), NOPOS, BPAWN, BKNIGHT, NOPC)}};
 
-TEST(TestBoard, ValConstruct) {
+TEST(BoardTest, ValConstruct) {
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
         Board b(it->first.c_str());
         for (int i = 0; i < 8; ++i) {
@@ -115,7 +115,7 @@ TEST(TestBoard, ValConstruct) {
     }
 }
 
-TEST(TestBoard, CpyConstruct) {
+TEST(BoardTest, CpyConstruct) {
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
         Board b1(it->first.c_str());
         Board b2(b1);
@@ -126,7 +126,7 @@ TEST(TestBoard, CpyConstruct) {
     }
 }
 
-TEST(TestBoard, AssignOp) {
+TEST(BoardTest, AssignOp) {
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
         Board b1(it->first.c_str());
         Board b2 = b1;
@@ -138,7 +138,7 @@ TEST(TestBoard, AssignOp) {
 }
 
 // integration
-TEST(TestBoard, CpyAssign) {
+TEST(BoardTest, CpyAssign) {
     Board b1;
     Board b2(b1);
     Board b3 = b1;
@@ -157,14 +157,14 @@ TEST(TestBoard, CpyAssign) {
     EXPECT_NE(b2.flags_, b1.flags_) << "diff flags";
 }
 
-TEST(TestBoard, GenFen) {
+TEST(BoardTest, GenFen) {
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
         Board b(it->first.c_str());
         EXPECT_EQ(it->first, b.toFen()) << "diff fen post on gen post construct";
     }
 }
 
-TEST(TestBoard, PrintOp) {
+TEST(BoardTest, PrintOp) {
     for (auto it = printCases.begin(); it != printCases.end(); ++it) {
         // expected
         string expect(PRINT_TOP_PAD);
@@ -180,7 +180,7 @@ TEST(TestBoard, PrintOp) {
     }
 }
 
-TEST(TestBoard, ApplyBasic) {
+TEST(BoardTest, ApplyBasic) {
     for (auto it = applyBasicMoveCases.begin(); it != applyBasicMoveCases.end(); ++it) {
         Board b(it->first[0].c_str());
         b.applyMove(it->second);
@@ -188,7 +188,7 @@ TEST(TestBoard, ApplyBasic) {
     }
 }
 
-TEST(TestBoard, ApplyCaptureBasic) {
+TEST(BoardTest, ApplyCaptureBasic) {
     for (auto it = applyBasicCaptureCases.begin(); it != applyBasicCaptureCases.end(); ++it) {
         Board b(it->first[0].c_str());
         b.applyMove(it->second);
@@ -196,7 +196,7 @@ TEST(TestBoard, ApplyCaptureBasic) {
     }
 }
 
-TEST(TestBoard, ApplyCastling) {
+TEST(BoardTest, ApplyCastling) {
     for (auto it = applyCastlingCases.begin(); it != applyCastlingCases.end(); ++it) {
         Board b(it->first[0].c_str());
         b.applyMove(it->second);
@@ -204,7 +204,7 @@ TEST(TestBoard, ApplyCastling) {
     }
 }
 
-TEST(TestBoard, ApplyEnPassant) {
+TEST(BoardTest, ApplyEnPassant) {
     for (auto it = applyEnPassantCases.begin(); it != applyEnPassantCases.end(); ++it) {
         Board b(it->first[0].c_str());
         b.applyMove(it->second);
@@ -212,7 +212,7 @@ TEST(TestBoard, ApplyEnPassant) {
     }
 }
 
-TEST(TestBoard, ApplyPromotion) {
+TEST(BoardTest, ApplyPromotion) {
     for (auto it = applyPromotionCases.begin(); it != applyPromotionCases.end(); ++it) {
         Board b(it->first[0].c_str());
         b.applyMove(it->second);
