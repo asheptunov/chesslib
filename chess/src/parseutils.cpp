@@ -11,7 +11,7 @@ pos_t posFromStr(const char *label) {
 
 string posToStr(const pos_t pos) {
     if (pos == NOPOS) return string("-");
-    return string({static_cast<char>((pos & 7) + 'a'), static_cast<char>((pos >> 3) + '1')});
+    return string({static_cast<char>((pos % 8) + 'a'), static_cast<char>((pos / 8) + '1')});
 }
 
 pc_t pieceFromChar(const char label) {

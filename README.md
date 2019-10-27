@@ -35,5 +35,6 @@ make all
 ## Authors
 
 Andriy Sheptunov
+
 Neil Jurling
 

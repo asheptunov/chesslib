@@ -93,10 +93,8 @@ typedef uint8_t pc_t;
 
 #define FLAGS_EP(flags) (((flags) >> 8) & 0xff)
 
-// checks if a pos is within the board
-#define IS_POS(x) (((x >= A1) && (x <= H8)))
-// same as IS_POS but uses rank in 0-7 and offs in 0-7
-#define ISPOS2(rk, offs) ((rk >= 0 && rk < 8) && (offs >= 0 && offs < 8))
+// checks if a piece is on the board, using rank in [0,7] and offs in [0,7]
+#define ISPOS2(rk, offs) (((rk) >= 0 && (rk) < 8) && ((offs) >= 0 && (offs) < 8))
 
 #define STARTING_BOARD "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
 

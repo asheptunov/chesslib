@@ -78,39 +78,60 @@ bool Move::isPromotion() const {
 
 int Move::castleType() const {
     if (frompc_ == WKING) {
-        if (topos_ == POS('g', 1)) return WKCASTLE;
-        if (topos_ == POS('c', 1)) return WQCASTLE;
+        if (frompos_ == POS('e', 1) && topos_ == POS('g', 1)) {
+            return WKCASTLE;
+        }
+        if (frompos_ == POS('e', 1) && topos_ == POS('c', 1)) {
+            return WQCASTLE;
+        }
     }
     if (frompc_ == BKING) {
-        if (topos_ == POS('g', 8)) return BKCASTLE;
-        if (topos_ == POS('c', 8)) return BQCASTLE;
+        if (frompos_ == POS('e', 8) && topos_ == POS('g', 8)) {
+            return BKCASTLE;
+        }
+        if (frompos_ == POS('e', 8) && topos_ == POS('c', 8)) {
+            return BQCASTLE;
+        }
     }
     return 0;  // not castle move
 }
 
 bool Move::operator<(const Move &other) const {
-    return (this->frompc_ < other.frompc_
-         || this->frompos_ < other.frompos_
-         || this->topc_ < other.topc_
-         || this->topos_ < other.topos_);
+        if (this->frompc_ != other.frompc_) {
+            return this->frompc_ < other.frompc_;
+        } else if (this->frompos_ != other.frompos_) {
+            return this->frompos_ < other.frompos_;
+        } else if (this->topc_ != other.topc_) {
+            return this->topc_ < other.topc_;
+        } else if (this->topos_ != other.topos_) {
+            return this->topos_ < other.topos_;
+        } else if (this->killpc_ != other.killpc_) {
+            return this->killpc_ < other.killpc_;
+        } else if (this->killpos_ != other.killpos_) {
+            return this->killpos_ < other.killpos_;
+        } else {
+            return 0;  // equal
+        }
 }
 
 string Move::algNot() const {
-    string ret("");
-
-    // ret += pieceToChar(move.frompc_);
+    // check if castling (special case)
     switch (this->castleType()) {
         case WKCASTLE:
         case BKCASTLE:
-            ret += "0-0";
-            return ret;
+            return string("0-0");
         case WQCASTLE:
         case BQCASTLE:
-            ret += "0-0-0";
-            return ret;
+            return string("0-0-0");
     }
+
+    string ret("");
+    // ret += pieceToChar(this->frompc_);
     ret += posToStr(this->frompos_);
-    if (this->isCapture()) ret += 'x';
+    if (this->isCapture()) {
+        ret += 'x';
+        // ret += pieceToChar(this->killpc_);
+    }
     ret += posToStr(this->topos_);
     if (this->isEnPassant()) ret += "e.p.";
     if (this->isPromotion()) ret += pieceToChar(this->topc_);
