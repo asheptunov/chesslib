@@ -83,7 +83,7 @@ p[a-h]4xP[a-h]3"e.p." {
 
 %%
 
-void clrRes() {
+static void clrRes() {
     MATCHED = 0;
     FROMPOS = 0;
     TOPOS = 0;
