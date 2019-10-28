@@ -16,6 +16,8 @@ GNU Make 3.81+
 
 GCC with support for C++11
 
+flex 2.5.35+
+
 ### Build Instructions
 
 To set up and build the engine, run

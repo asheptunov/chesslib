@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "move.h"
+#include "algnot.h"
 #include "parseutils.h"
 
 namespace game
@@ -12,43 +13,9 @@ using std::ostream;
 using std::string;
 
 Move::Move(const char *algNot) {
-    // <frompc><frompos><...>
-    frompc_ = pieceFromChar(algNot[0]);
-    frompos_ = posFromStr(&algNot[1]);
-    if (strchr(algNot, 'x')) {  // capture
-        // std::cout << "MOVE " << algNot << " IS A CAPTURE" << std::endl;
-        // <frompc><frompos><'x'><killpc><topos><'' | topc | 'e.p.'>
-        switch (strlen(algNot)) {
-            case 7:  // normal capture
-                topc_ = frompc_;
-                topos_ = posFromStr(&algNot[5]);
-                killpc_ = pieceFromChar(algNot[4]);
-                killpos_ = topos_;
-                break;
-            case 8:  // promotion capture
-                topc_ = pieceFromChar(algNot[7]);
-                topos_ = posFromStr(&algNot[5]);
-                killpc_ = pieceFromChar(algNot[4]);
-                killpos_ = topos_;
-                break;
-            case 11:  // en passant capture
-                assert(strstr(algNot, "e.p."));
-                topc_ = frompc_;
-                topos_ = posFromStr(&algNot[5]);
-                killpc_ = pieceFromChar(algNot[4]);
-                killpos_ = (topos_ / 8 == 2) ? topos_ + 8 : topos_ - 8;
-                break;
-            default:
-                std::cerr << "INVALID ALG NOT CASE" << std::endl;
-                assert(false);
-        }
-    } else {  // not capture
-        // std::cout << "MOVE " << algNot << " IS NOT A CAPTURE" << std::endl;
-        // <frompc><frompos><topos><'' | topc>
-        topc_ = (strlen(algNot) == 6) ? pieceFromChar(algNot[5]) : frompc_;
-        topos_ = posFromStr(&algNot[3]);
-        killpc_ = NOPC;
-        killpos_ = NOPOS;
+    if (parseAlgNot(algNot, &frompos_, &topos_, &killpos_, &frompc_, &topc_, &killpc_)) {
+        std::cerr << "Failure parsing a move from string " << algNot << "; aborting" << std::endl;
+        exit(1);
     }
 }
 
