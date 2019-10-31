@@ -25,7 +25,7 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
 # -----------------------------
 CXX = g++
 CPPFLAGS = -isystem $(GTEST_HDR)
-CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
 
 # --------------------------
 # >>>> LEXER PROPERTIES <<<<
