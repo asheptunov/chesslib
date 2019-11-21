@@ -25,13 +25,20 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
 # -----------------------------
 CXX = g++
 CPPFLAGS = -isystem $(GTEST_HDR)
-CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
 
 # --------------------------
 # >>>> LEXER PROPERTIES <<<<
 # --------------------------
 LEX = flex
 LEXFLAGS = --align --fast --verbose  # --debug
+
+# -----------------------------
+# >>>> ARCHIVER PROPERTIES <<<<
+# -----------------------------
+
+AR = ar
+ARFLAGS = -rv
 
 # -------------------------
 # >>>> TARGET BINARIES <<<<
@@ -40,7 +47,9 @@ TESTS = $(CHESS_BIN)/moveTest        \
         $(CHESS_BIN)/boardTest       \
         $(CHESS_BIN)/movegenTest     \
 
-all: $(TESTS)
+LIBS = $(CHESS_BIN)/libchess.a
+
+all: $(TESTS) $(LIBS)
 
 .PHONY: clean
 
@@ -95,3 +104,5 @@ $(CHESS_BIN)/boardTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(
 $(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
+$(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+	$(AR) $(ARFLAGS) $@ $^
