@@ -212,7 +212,8 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         // EN PASSANT TAKES
         pos_t eppos = (flags_ >> 8) & 0xff;
         if (eppos != NOPOS
-        && (eppos == POS2(offs - 1, rk + 1) || eppos == POS2(offs + 1, rk + 1))) {
+        && ((ISPOS2(rk+1, offs-1) && eppos == POS2(offs - 1, rk + 1))
+         || (ISPOS2(rk+1, offs+1) && eppos == POS2(offs + 1, rk + 1)))) {
             // add ep up take
             dest->push_back(Move(POS2(offs, rk), eppos, eppos - 8, WPAWN, WPAWN, BPAWN));
         }
@@ -274,7 +275,8 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
         // EN PASSANT TAKES
         pos_t eppos = (flags_ >> 8) & 0xff;
         if (eppos != NOPOS
-        && (eppos == POS2(offs - 1, rk - 1) || eppos == POS2(offs + 1, rk - 1))) {
+        && ((ISPOS2(rk-1, offs-1) && eppos == POS2(offs - 1, rk - 1))
+         || (ISPOS2(rk-1, offs+1) && eppos == POS2(offs + 1, rk - 1)))) {
             // add ep down take
             dest->push_back(Move(POS2(offs, rk), eppos, eppos + 8, BPAWN, BPAWN, WPAWN));
         }
