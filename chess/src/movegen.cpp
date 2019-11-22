@@ -417,8 +417,8 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b1 empty
         && !hit(rk, offs, false)       // king not in check
         && !hit(rk, offs-1, false)     // d1 not hit
-        && !hit(rk, offs-2, false)     // c1 not hit
-        && !hit(rk, offs-3, false)) {  // b1 not hit
+        && !hit(rk, offs-2, false)) {  // c1 not hit
+        // && !hit(rk, offs-3, false)) {  // b1 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
@@ -439,8 +439,8 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b8 empty
         && !hit(rk, offs, true)       // king not in check
         && !hit(rk, offs-1, true)     // d8 not hit
-        && !hit(rk, offs-2, true)     // c8 not hit
-        && !hit(rk, offs-3, true)) {  // b8 not hit
+        && !hit(rk, offs-2, true)) {  // c8 not hit
+        // && !hit(rk, offs-3, true)) {  // b8 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
     }
