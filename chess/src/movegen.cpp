@@ -76,6 +76,10 @@ namespace game
         blocker; \
     } \
 
+#define CUR_BISHOP_MOVE bishopMoves[i * 7 + j]
+#define CUR_ROOK_MOVE rookMoves[i * 7 + j]
+#define CUR_QUEEN_MOVE queenMoves[i * 7 + j]
+
 static map<int, vector<vector<int8_t>>> moves =
    {{WKNIGHT, {{2 * UP, RT}, {2 * UP, LT}, {2 * DN, RT}, {2 * DN, LT}, {UP, 2 * RT}, {UP, 2 * LT}, {DN, 2 * RT}, {DN, 2 * LT}}},
     {WBISHOP, {DIAG}},
@@ -85,6 +89,7 @@ static map<int, vector<vector<int8_t>>> moves =
 
 vector<Move> Board::generateMoves() const {
     vector<Move> ret;
+    ret.reserve(20);
 
     pos_t kingpos = NOPOS;  // this should be set by the end, or we are in an invalid state
     const bool player = FLAGS_BPLAYER(flags_);  // 1 if current player is black, 0 if white
@@ -137,12 +142,12 @@ vector<Move> Board::generateMoves() const {
 
     assert(kingpos != NOPOS);
 
-    const Board cur(*this);
-    Board fut;
     const pc_t king = FLAGS_BPLAYER(flags_) ? BKING : WKING;
 
-    auto end = std::remove_if(ret.begin(), ret.end(), [&cur, &fut, player, king, kingpos](const Move &mv) {
-        fut = Board(cur);  // reset to current
+//    ret.shrink_to_fit();
+
+    auto end = std::remove_if(ret.begin(), ret.end(), [this, player, king, kingpos](const Move &mv) {
+        Board fut(*this);  // reset to current
         fut.applyMove(mv);  // next future
         pos_t kingpos2 = (mv.frompc_ == king) ? mv.topos_ : kingpos;
         return fut.hit(kingpos2 / 8, kingpos2 % 8, player);  // remove if king in check
@@ -305,19 +310,17 @@ void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
 void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
     pc_t frompc = FLAGS_WPLAYER(flags_) ? WBISHOP : BBISHOP;
-    vector<int8_t> mv;
 
     vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
     for (int i = 0; i < 4; ++i) {  // 4 diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along diagonal
-            mv = bishopMoves[i * 7 + j];
-            if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
-                killpc = (ranks_[rk+mv[0]] >> ((offs+mv[1]) * 4)) & 0xf;
+            if (ISPOS2(rk + CUR_BISHOP_MOVE[0], offs + CUR_BISHOP_MOVE[1])) {  // in bounds
+                killpc = (ranks_[rk+CUR_BISHOP_MOVE[0]] >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal bishop move
-                    dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE[1], rk+CUR_BISHOP_MOVE[0]), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the diagonal
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), POS2(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
+                        dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE[1], rk+CUR_BISHOP_MOVE[0]), POS2(offs+CUR_BISHOP_MOVE[1], rk+CUR_BISHOP_MOVE[0]), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill diagonal if encountered another piece
                 }
@@ -331,19 +334,17 @@ void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
 void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
     pc_t frompc = FLAGS_WPLAYER(flags_) ? WROOK : BROOK;
-    vector<int8_t> mv;
 
     vector<vector<int8_t>> &rookMoves = moves[WROOK];
     for (int i = 0; i < 4; ++i) {  // 4 laterals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lateral
-            mv = rookMoves[i * 7 + j];
-            if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
-                killpc = (ranks_[rk+mv[0]] >> ((offs+mv[1]) * 4)) & 0xf;
+            if (ISPOS2(rk + CUR_ROOK_MOVE[0], offs + CUR_ROOK_MOVE[1])) {  // in bounds
+                killpc = (ranks_[rk+CUR_ROOK_MOVE[0]] >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal rook move
-                    dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE[1], rk+CUR_ROOK_MOVE[0]), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the lateral
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), POS2(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
+                        dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE[1], rk+CUR_ROOK_MOVE[0]), POS2(offs+CUR_ROOK_MOVE[1], rk+CUR_ROOK_MOVE[0]), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill lateral if encountered another piece
                 }
@@ -357,19 +358,17 @@ void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
 void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
     pc_t frompc = FLAGS_WPLAYER(flags_) ? WQUEEN : BQUEEN;
-    vector<int8_t> mv;
 
     vector<vector<int8_t>> &queenMoves = moves[WQUEEN];
     for (int i = 0; i < 8; ++i) {  // 8 laterals / diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lat / diag
-            mv = queenMoves[i * 7 + j];
-            if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
-                killpc = (ranks_[rk+mv[0]] >> ((offs+mv[1]) * 4)) & 0xf;
+            if (ISPOS2(rk + CUR_QUEEN_MOVE[0], offs + CUR_QUEEN_MOVE[1])) {  // in bounds
+                killpc = (ranks_[rk+CUR_QUEEN_MOVE[0]] >> ((offs+CUR_QUEEN_MOVE[1]) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal queen move
-                    dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), NOPOS, frompc, frompc, NOPC));
+                    dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE[1], rk+CUR_QUEEN_MOVE[0]), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the lat / diag
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        dest->push_back(Move(POS2(offs, rk), POS2(offs+mv[1], rk+mv[0]), POS2(offs+mv[1], rk+mv[0]), frompc, frompc, killpc));
+                        dest->push_back(Move(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE[1], rk+CUR_QUEEN_MOVE[0]), POS2(offs+CUR_QUEEN_MOVE[1], rk+CUR_QUEEN_MOVE[0]), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill lat / diag if encountered another piece
                 }
@@ -469,24 +468,22 @@ bool Board::hit(int rk, int offs, bool white) const {
         LOOKINGFOR3(rk, offs-1, WROOK, WQUEEN, WKING, blocks |= (1 << 6));
 
         // KNIGHT ATTACKERS
-        vector<vector<int8_t>> knightMoves = moves[WKNIGHT];
+        const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
         for (const vector<int8_t> &mv : knightMoves) {
             LOOKINGFOR1(rk+mv[0], offs+mv[1], WKNIGHT, ;);
         }
 
-        vector<int8_t> mv;
         pc_t attacker;
 
         // DIAGONAL ATTACKERS
-        vector<vector<int8_t>> bishopMoves = moves[WBISHOP];
+        const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
         for (int i = 0; i < 4; ++i) {  // 4 diagonals
             if (blocks & (1 << (i * 2 + 1))) {  // if single blocker from above, skip diagonal
                 continue;
             }
             for (int j = 1; j < 7; ++j) {  // 7 squares per diagonal, exclude first one
-                mv = bishopMoves[i * 7 + j];
-                if (ISPOS2(rk+mv[0], offs+mv[1])) {
-                    attacker = ((ranks_[rk+mv[0]]) >> ((offs+mv[1]) * 4)) & 0xf;
+                if (ISPOS2(rk+CUR_BISHOP_MOVE[0], offs+CUR_BISHOP_MOVE[1])) {
+                    attacker = ((ranks_[rk+CUR_BISHOP_MOVE[0]]) >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
                     if (attacker == WBISHOP || attacker == WQUEEN) {  // hit on diagonal
                         return true;
                     } else if (attacker != NOPC) {  // no hit but diagonal blocked; cont to next diagonal
@@ -499,15 +496,14 @@ bool Board::hit(int rk, int offs, bool white) const {
         }
 
         // LATERAL ATTACKERS
-        vector<vector<int8_t>> rookMoves = moves[WROOK];
+        const vector<vector<int8_t>> &rookMoves = moves[WROOK];
         for (int i = 0; i < 4; ++i) {  // 4 laterals
             if (blocks & (1 << (i * 2))) {  // if single blocker from above, skip lateral
                 continue;
             }
             for (int j = 1; j < 7; ++j) {  // 7 squares per lateral, exclude first one
-                mv = rookMoves[i * 7 + j];
-                if (ISPOS2(rk+mv[0], offs+mv[1])) {
-                    attacker = ((ranks_[rk+mv[0]]) >> ((offs+mv[1]) * 4)) & 0xf;
+                if (ISPOS2(rk+CUR_ROOK_MOVE[0], offs+CUR_ROOK_MOVE[1])) {
+                    attacker = ((ranks_[rk+CUR_ROOK_MOVE[0]]) >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
                     if (attacker == WROOK || attacker == WQUEEN) {  // hit on lateral
                         return true;
                     } else if (attacker != NOPC) {  // no hit but lateral blocked; cont to next lateral
@@ -536,24 +532,22 @@ bool Board::hit(int rk, int offs, bool white) const {
         LOOKINGFOR3(rk, offs-1, BROOK, BQUEEN, BKING, blocks |= (1 << 6));
 
         // KNIGHT ATTACKERS
-        vector<vector<int8_t>> knightMoves = moves[WKNIGHT];
+        const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
         for (const vector<int8_t> &mv : knightMoves) {
             LOOKINGFOR1(rk+mv[0], offs+mv[1], BKNIGHT, ;);
         }
 
-        vector<int8_t> mv;
         pc_t attacker;
 
         // DIAGONAL ATTACKERS
-        vector<vector<int8_t>> bishopMoves = moves[WBISHOP];
+        const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
         for (int i = 0; i < 4; ++i) {  // 4 diagonals
             if (blocks & (1 << (i * 2 + 1))) {  // if single blocker from above, skip diagonal
                 continue;
             }
             for (int j = 1; j < 7; ++j) {  // 7 squares per diagonal, exclude first one
-                mv = bishopMoves[i * 7 + j];
-                if (ISPOS2(rk+mv[0], offs+mv[1])) {
-                    attacker = ((ranks_[rk+mv[0]]) >> ((offs+mv[1]) * 4)) & 0xf;
+                if (ISPOS2(rk+CUR_BISHOP_MOVE[0], offs+CUR_BISHOP_MOVE[1])) {
+                    attacker = ((ranks_[rk+CUR_BISHOP_MOVE[0]]) >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
                     if (attacker == BBISHOP || attacker == BQUEEN) {  // hit on diagonal
                         return true;
                     } else if (attacker != NOPC) {  // no hit but diagonal blocked; cont to next diagonal
@@ -566,15 +560,14 @@ bool Board::hit(int rk, int offs, bool white) const {
         }
 
         // LATERAL ATTACKERS
-        vector<vector<int8_t>> rookMoves = moves[WROOK];
+        const vector<vector<int8_t>> &rookMoves = moves[WROOK];
         for (int i = 0; i < 4; ++i) {  // 4 laterals
             if (blocks & (1 << (i * 2))) {  // if single blocker from above, skip lateral
                 continue;
             }
             for (int j = 1; j < 7; ++j) {  // 7 squares per lateral, exclude first one
-                mv = rookMoves[i * 7 + j];
-                if (ISPOS2(rk+mv[0], offs+mv[1])) {
-                    attacker = ((ranks_[rk+mv[0]]) >> ((offs+mv[1]) * 4)) & 0xf;
+                if (ISPOS2(rk+CUR_ROOK_MOVE[0], offs+CUR_ROOK_MOVE[1])) {
+                    attacker = ((ranks_[rk+CUR_ROOK_MOVE[0]]) >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
                     if (attacker == BROOK || attacker == BQUEEN) {  // hit on lateral
                         return true;
                     } else if (attacker != NOPC) {  // no hit but lateral blocked; cont to next lateral
