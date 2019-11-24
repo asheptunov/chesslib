@@ -290,9 +290,9 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
 
 void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
-    pc_t frompc = FLAGS_WPLAYER(flags_) ? WKNIGHT : BKNIGHT;
+    const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKNIGHT : BKNIGHT;
 
-    vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
+    const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
     for (const vector<int8_t> &mv : knightMoves) {
         if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
             killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xf;
@@ -309,9 +309,9 @@ void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
 
 void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
-    pc_t frompc = FLAGS_WPLAYER(flags_) ? WBISHOP : BBISHOP;
+    const pc_t frompc = FLAGS_WPLAYER(flags_) ? WBISHOP : BBISHOP;
 
-    vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
+    const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
     for (int i = 0; i < 4; ++i) {  // 4 diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along diagonal
             if (ISPOS2(rk + CUR_BISHOP_MOVE[0], offs + CUR_BISHOP_MOVE[1])) {  // in bounds
@@ -333,9 +333,9 @@ void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
 
 void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
-    pc_t frompc = FLAGS_WPLAYER(flags_) ? WROOK : BROOK;
+    const pc_t frompc = FLAGS_WPLAYER(flags_) ? WROOK : BROOK;
 
-    vector<vector<int8_t>> &rookMoves = moves[WROOK];
+    const vector<vector<int8_t>> &rookMoves = moves[WROOK];
     for (int i = 0; i < 4; ++i) {  // 4 laterals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lateral
             if (ISPOS2(rk + CUR_ROOK_MOVE[0], offs + CUR_ROOK_MOVE[1])) {  // in bounds
@@ -357,9 +357,9 @@ void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
 
 void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
-    pc_t frompc = FLAGS_WPLAYER(flags_) ? WQUEEN : BQUEEN;
+    const pc_t frompc = FLAGS_WPLAYER(flags_) ? WQUEEN : BQUEEN;
 
-    vector<vector<int8_t>> &queenMoves = moves[WQUEEN];
+    const vector<vector<int8_t>> &queenMoves = moves[WQUEEN];
     for (int i = 0; i < 8; ++i) {  // 8 laterals / diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lat / diag
             if (ISPOS2(rk + CUR_QUEEN_MOVE[0], offs + CUR_QUEEN_MOVE[1])) {  // in bounds
@@ -381,10 +381,10 @@ void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
 
 void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
     pc_t killpc;
-    pc_t frompc = FLAGS_WPLAYER(flags_) ? WKING : BKING;
+    const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKING : BKING;
 
     // NORMAL KING MOVES
-    vector<vector<int8_t>> &kingMoves = moves[WKING];
+    const vector<vector<int8_t>> &kingMoves = moves[WKING];
     for (const vector<int8_t> &mv : kingMoves) {
         if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
             killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xf;
