@@ -63,6 +63,21 @@ class Board {
     vector<Move> generateMoves() const;
 
     /**
+     * Returns true if the game has ended in a mate, or specifically when the active player's king is in check and
+     * no moves remain.
+     *
+     * @return true iff the game has ended in a mate
+     */
+    bool mate() const;
+
+    /**
+     * Returns true if the game has ended in a stalemate, false otherwise.
+     *
+     * @return true iff the game has ended in a stalemate
+     */
+    bool stalemate() const;
+
+    /**
      * Returns the Forsyth-Edwards notation for this board.
      * 
      * @return the FEN
@@ -91,15 +106,15 @@ class Board {
 
 //    private:
     uint32_t ranks_[8];
-    uint16_t flags_;
+    uint32_t flags_;
 
    private:
-    void generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void generateRookMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void generateKingMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generateRookMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void _generateKingMoves(vector<Move> *dest, const int rk, const int offs) const;
     bool _hitSingle(const int rk, const int offs, const bool white, uint8_t &blocks) const;
     bool _hitKnight(const int rk, const int offs, const bool white) const;
     bool _hitDiagonal(const int rk, const int offs, const bool white, uint8_t &blocks) const;
