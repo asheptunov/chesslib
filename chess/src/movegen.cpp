@@ -118,28 +118,28 @@ vector<Move> Board::generateMoves() const {
                 break;
             case WPAWN:
             case BPAWN:
-                this->generatePawnMoves(&ret, rk, offs);
+                _generatePawnMoves(&ret, rk, offs);
                 break;
             case WKNIGHT:
             case BKNIGHT:
-                this->generateKnightMoves(&ret, rk, offs);
+                _generateKnightMoves(&ret, rk, offs);
                 break;
             case WBISHOP:
             case BBISHOP:
-                this->generateBishopMoves(&ret, rk, offs);
+                _generateBishopMoves(&ret, rk, offs);
                 break;
             case WROOK:
             case BROOK:
-                this->generateRookMoves(&ret, rk, offs);
+                _generateRookMoves(&ret, rk, offs);
                 break;
             case WQUEEN:
             case BQUEEN:
-                this->generateQueenMoves(&ret, rk, offs);
+                _generateQueenMoves(&ret, rk, offs);
                 break;
             case WKING:
             case BKING:
                 kingpos = POS2(offs, rk);
-                this->generateKingMoves(&ret, rk, offs);
+                _generateKingMoves(&ret, rk, offs);
                 break;
             default:
                 break;

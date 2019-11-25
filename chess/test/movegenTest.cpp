@@ -32,6 +32,13 @@ static map <string, string> genCases =
     {"4k3/8/8/8/8/4r3/8/R3K2R w KQ -",                                       "Ke1f1	Ke1d1	Ke1d2	Ke1f2"},
     {"1k6/8/8/8/8/8/2p5/1R2K3 b - -",                                        "kb8c8	kb8a8	kb8a7	kb8c7	pc2xRb1q	pc2xRb1n	pc2xRb1r	pc2xRb1b"}};
 
+// fen -> ( mate? , stalemate? )
+static map <string, vector<bool>> endgameCases =
+   {{"rnbqkbnr/pp3ppp/2p1p3/3p4/4P3/2N3P1/PPPPQP1P/R1B1KBNR b KQkq -", {false, false}},  // not check
+    {"1rbqkbnr/p2Q1ppp/3p4/2p1p3/2P1P3/3P1N2/PP3PPP/RNB1KB1R b KQk -", {false, false}},  // check, not mate
+    {"rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq -", {true, false}},  // fastest mate
+    {"5bnr/4p1pq/4Qpkr/7p/7P/4P3/PPPP1PP1/RNB1KBNR b KQ -", {false, true}}};  // fastest stalemate
+
 string printMoveVec(const vector<Move> &moves);
 
 static map<string, map<uint8_t, vector<bool>>> hitCases =
@@ -117,14 +124,14 @@ TEST(BoardMoveGenTest, MoveList) {
 
       std::sort(actual.begin(), actual.end(), [](const Move &a, const Move &b) {return a < b;});
       std::sort(expect.begin(), expect.end(), [](const Move &a, const Move &b) {return a < b;});
-      string actualStr = printMoveVec(actual);
-      string expectStr = printMoveVec(expect);
+      const string actualStr = printMoveVec(actual);
+      const string expectStr = printMoveVec(expect);
 
       EXPECT_EQ(actual.size(), expect.size()) << "Diff moves list size for " << b.toFen()
          << std::endl << "\tGot" << actualStr
          << std::endl << "\tExp" << expectStr;
 
-      if (actual.size() != expect.size() || actual.size() == 0) {
+      if ((actual.size() != expect.size()) || actual.size() == 0) {
          continue;
       }
 
@@ -134,7 +141,7 @@ TEST(BoardMoveGenTest, MoveList) {
 
       Move *m1;
       Move *m2;
-      for (unsigned int i = 0; i < actual.size(); ++i) {
+      for (size_t i = 0; i < actual.size(); ++i) {
          m1 = &actual[i];
          m2 = &expect[i];
          EXPECT_EQ(strcmp(m1->algNot().c_str(), m2->algNot().c_str()), 0) << "Move diff; got " << m1->algNot() << " but expected " << m2->algNot();
@@ -146,6 +153,18 @@ TEST(BoardMoveGenTest, MoveList) {
          EXPECT_EQ(m1->killpc_, m2->killpc_);
       }
    }
+}
+
+TEST(BoardMoveGenTest, Endgame) {
+    for (auto it = endgameCases.begin(); it != endgameCases.end(); ++it) {
+        const string &fen = it->first;
+        const vector<bool> &expect = it->second;
+
+        Board b(fen.c_str());
+
+        EXPECT_EQ(b.mate(), expect[0]);
+        EXPECT_EQ(b.stalemate(), expect[1]);
+    }
 }
 
 string printMoveVec(const vector<Move> &moves) {
