@@ -82,6 +82,16 @@ typedef uint8_t pc_t;
     ZEROEP(flags);           \
     ((flags) |= ((ep_pos) << 8))
 
+#define ZEROWKING(flags) ((flags) &= ~(0xff << 16))
+#define SETWKING(kingpos, flags) \
+    ZEROWKING(flags);            \
+    ((flags) |= ((kingpos) << 16))
+
+#define ZEROBKING(flags) ((flags) &= ~(0xff << 24))
+#define SETBKING(kingpos, flags) \
+    ZEROBKING(flags);            \
+    ((flags) |= ((kingpos) << 24))
+
 #define FLAGS_WKCASTLE(flags) (!!((flags) & WKCASTLE))
 #define FLAGS_WQCASTLE(flags) (!!((flags) & WQCASTLE))
 #define FLAGS_BKCASTLE(flags) (!!((flags) & BKCASTLE))
@@ -92,6 +102,9 @@ typedef uint8_t pc_t;
 #define FLAGS_BPLAYER(flags) (!((flags) & PLAYER))
 
 #define FLAGS_EP(flags) (((flags) >> 8) & 0xff)
+
+#define FLAGS_WKING(flags) (((flags) >> 16) & 0xff)
+#define FLAGS_BKING(flags) (((flags) >> 24) & 0xff)
 
 // checks if a piece is on the board, using rank in [0,7] and offs in [0,7]
 #define ISPOS2(rk, offs) (((rk) >= 0 && (rk) < 8) && ((offs) >= 0 && (offs) < 8))

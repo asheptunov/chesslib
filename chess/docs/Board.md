@@ -45,3 +45,5 @@ Bit 3: 1 iff black kingside castling is legal
 Bit 4: 1 iff black queenside castling is legal
 Bit 5: 1 iff the active player is white
 Bits 9-16: the en passant position, or NOPOS if no ep square was exposed last turn
+Bits 17-24: the white king's position
+Bits 25-32: the black king's position

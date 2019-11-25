@@ -163,7 +163,7 @@ vector<Move> Board::generateMoves() const {
     return ret;
 }
 
-void Board::generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const {
 
     if (FLAGS_WPLAYER(flags_)) {  // WHITE; moves go UP in rank
 
@@ -294,7 +294,7 @@ void Board::generatePawnMoves(vector<Move> *dest, const int rk, const int offs) 
     }
 }
 
-void Board::generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKNIGHT : BKNIGHT;
     pc_t killpc;
 
@@ -312,7 +312,7 @@ void Board::generateKnightMoves(vector<Move> *dest, const int rk, const int offs
     }
 }
 
-void Board::generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WBISHOP : BBISHOP;
     pc_t killpc;
 
@@ -335,7 +335,7 @@ void Board::generateBishopMoves(vector<Move> *dest, const int rk, const int offs
     }
 }
 
-void Board::generateRookMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generateRookMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WROOK : BROOK;
     pc_t killpc;
 
@@ -358,7 +358,7 @@ void Board::generateRookMoves(vector<Move> *dest, const int rk, const int offs) 
     }
 }
 
-void Board::generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WQUEEN : BQUEEN;
     pc_t killpc;
 
@@ -381,7 +381,7 @@ void Board::generateQueenMoves(vector<Move> *dest, const int rk, const int offs)
     }
 }
 
-void Board::generateKingMoves(vector<Move> *dest, const int rk, const int offs) const {
+void Board::_generateKingMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKING : BKING;
     pc_t killpc;
 

@@ -30,6 +30,14 @@ Board::Board(const char *fen) {
         offs = 0;
         for (unsigned int i = 0; i < strlen(fenranks[8 - rk]); ++i) {
             pc = pieceFromChar(fenranks[8 - rk][i]);
+
+            // SETUP KING POS
+            if (pc == WKING) {
+                SETWKING(POS2(offs, rk-1), flags_);
+            } else if (pc == BKING) {
+                SETBKING(POS2(offs, rk-1), flags_);
+            }
+
             ZEROPOS(offs, ranks_[rk - 1]);
             SETPOS(offs, ranks_[rk - 1], pc);
             offs += (pc == NOPC) ? fenranks[8 - rk][i] - '0' : 1;
@@ -122,8 +130,39 @@ void Board::applyMove(const Move &move) {
     int player = FLAGS_WPLAYER(flags_) ? BPLAYER : WPLAYER;
     SETPLAYER(player, flags_);
 
+    // UPDATE KING POSITION
+    if (move.frompc_ == WKING) {
+        SETWKING(move.topos_, flags_);
+    } else if (move.frompc_ == BKING) {
+        SETBKING(move.topos_, flags_);
+    }
+
     // UPDATE SIGNATURE
     // TODO:
+}
+
+bool Board::mate() const {
+    pos_t kingpos = FLAGS_WPLAYER(flags_) ? FLAGS_WKING(flags_) : FLAGS_BKING(flags_);
+
+    bool inCheck = hit(kingpos / 8, kingpos % 8, FLAGS_BPLAYER(flags_));
+
+    if (!inCheck) {  // do the easy stuff first
+        return false;
+    }
+
+    return this->generateMoves().size() == 0;  // in check and no moves -> mate
+}
+
+bool Board::stalemate() const {
+    pos_t kingpos = FLAGS_WPLAYER(flags_) ? FLAGS_WKING(flags_) : FLAGS_BKING(flags_);
+
+    bool inCheck = hit(kingpos / 8, kingpos % 8, FLAGS_BPLAYER(flags_));
+
+    if (inCheck) {  // do the easy stuff first
+        return false;
+    }
+
+    return this->generateMoves().size() == 0;  // not in check and no moves -> stalemate
 }
 
 string Board::toFen() const {
