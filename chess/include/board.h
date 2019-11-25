@@ -87,19 +87,23 @@ class Board {
      * 
      * @return true if the position is hit, false otherwise
      */
-    bool hit(int rk, int offs, bool white) const;
+    bool hit(const int rk, const int offs, const bool white) const;
 
 //    private:
     uint32_t ranks_[8];
     uint16_t flags_;
 
    private:
-    void generatePawnMoves(vector<Move> *dest, int rk, int offs) const;
-    void generateKnightMoves(vector<Move> *dest, int rk, int offs) const;
-    void generateBishopMoves(vector<Move> *dest, int rk, int offs) const;
-    void generateRookMoves(vector<Move> *dest, int rk, int offs) const;
-    void generateQueenMoves(vector<Move> *dest, int rk, int offs) const;
-    void generateKingMoves(vector<Move> *dest, int rk, int offs) const;
+    void generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void generateRookMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const;
+    void generateKingMoves(vector<Move> *dest, const int rk, const int offs) const;
+    bool _hitSingle(const int rk, const int offs, const bool white, uint8_t &blocks) const;
+    bool _hitKnight(const int rk, const int offs, const bool white) const;
+    bool _hitDiagonal(const int rk, const int offs, const bool white, uint8_t &blocks) const;
+    bool _hitLateral(const int rk, const int offs, const bool white, uint8_t &blocks) const;
 };
 
 }  // namespace game

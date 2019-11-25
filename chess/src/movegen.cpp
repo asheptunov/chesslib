@@ -30,7 +30,7 @@ namespace game
 
 #define LOOKINGFOR4(rk, offs, pc1, pc2, pc3, pc4, blocker) \
     if (ISPOS2((rk), (offs))) { \
-        pc_t attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
+        attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
         if (attacker == (pc1) || attacker == (pc2) || attacker == (pc3) || attacker == (pc4)) { \
             return true; \
         } else if (attacker != NOPC) {  /* pc that can't hit us but blocks diagonal / lateral */ \
@@ -42,7 +42,7 @@ namespace game
 
 #define LOOKINGFOR3(rk, offs, pc1, pc2, pc3, blocker) \
     if (ISPOS2((rk), (offs))) { \
-        pc_t attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
+        attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
         if (attacker == (pc1) || attacker == (pc2) || attacker == (pc3)) { \
             return true; \
         } else if (attacker != NOPC) {  /* pc that can't hit us but blocks diagonal / lateral */ \
@@ -54,7 +54,7 @@ namespace game
 
 #define LOOKINGFOR2(rk, offs, pc1, pc2, blocker) \
     if (ISPOS2((rk), (offs))) { \
-        pc_t attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
+        attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
         if (attacker == (pc1) || attacker == (pc2)) { \
             return true; \
         } else if (attacker != NOPC) {  /* pc that can't hit us but blocks diagonal / lateral */ \
@@ -66,7 +66,7 @@ namespace game
 
 #define LOOKINGFOR1(rk, offs, pc, blocker) \
     if (ISPOS2((rk), (offs))) { \
-        pc_t attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
+        attacker = ((ranks_[(rk)] >> (((offs)) * 4)) & 0xf); \
         if (attacker == (pc)) { \
             return true; \
         } else if (attacker != NOPC) {  /* pc that can't hit us but blocks diagonal / lateral */ \
@@ -76,32 +76,40 @@ namespace game
         blocker; \
     } \
 
+static const vector<vector<int8_t>> knightMoves =
+        {{2 * UP, RT}, {2 * UP, LT}, {2 * DN, RT}, {2 * DN, LT}, {UP, 2 * RT}, {UP, 2 * LT}, {DN, 2 * RT}, {DN, 2 * LT}};
+static const vector<vector<int8_t>> bishopMoves =
+        {DIAG};
+static const vector<vector<int8_t>> rookMoves =
+        {LATERAL};
+static const vector<vector<int8_t>> queenMoves =
+        {DIAG, LATERAL};
+static const vector<vector<int8_t>> kingMoves =
+        {{UP, 0}, {DN, 0}, {0, RT}, {0, LT}, {UP, RT}, {UP, LT}, {DN, RT}, {DN, LT}};
+
 #define CUR_BISHOP_MOVE bishopMoves[i * 7 + j]
 #define CUR_ROOK_MOVE rookMoves[i * 7 + j]
 #define CUR_QUEEN_MOVE queenMoves[i * 7 + j]
 
-static map<int, vector<vector<int8_t>>> moves =
-   {{WKNIGHT, {{2 * UP, RT}, {2 * UP, LT}, {2 * DN, RT}, {2 * DN, LT}, {UP, 2 * RT}, {UP, 2 * LT}, {DN, 2 * RT}, {DN, 2 * LT}}},
-    {WBISHOP, {DIAG}},
-    {WROOK,   {LATERAL}},
-    {WQUEEN,  {DIAG, LATERAL}},
-    {WKING,   {{UP, 0}, {DN, 0}, {0, RT}, {0, LT}, {UP, RT}, {UP, LT}, {DN, RT}, {DN, LT}}}};
-
 vector<Move> Board::generateMoves() const {
     vector<Move> ret;
-    ret.reserve(20);
+    ret.reserve(30);
 
     pos_t kingpos = NOPOS;  // this should be set by the end, or we are in an invalid state
     const bool player = FLAGS_BPLAYER(flags_);  // 1 if current player is black, 0 if white
     // player represents parity of current player's pcs (pc / 6)
 
     uint32_t rank;
+    int rk;
+    int offs;
+    int pc;
+
     // iterate A8 -> H1
-    for (int rk = 7; rk >= 0; --rk) {  // 8 to 1
+    for (rk = 7; rk >= 0; --rk) {  // 8 to 1
         rank = this->ranks_[rk];
-        for (int offs = 0; offs < 8; ++offs) {  // a to h
-            int pc = rank & 0xf;  // one nibble / pc at a time
-            if ((pc / 6) != player) {  // immobile color; continue
+        for (offs = 0; offs < 8; ++offs) {  // a to h
+            pc = rank & 0xf;  // one nibble / pc at a time
+            if (player ^ (pc >= BPAWN)) {  // piece doesn't match active player
                 rank >>= 4;
                 continue;
             }
@@ -144,8 +152,6 @@ vector<Move> Board::generateMoves() const {
 
     const pc_t king = FLAGS_BPLAYER(flags_) ? BKING : WKING;
 
-//    ret.shrink_to_fit();
-
     auto end = std::remove_if(ret.begin(), ret.end(), [this, player, king, kingpos](const Move &mv) {
         Board fut(*this);  // reset to current
         fut.applyMove(mv);  // next future
@@ -157,7 +163,7 @@ vector<Move> Board::generateMoves() const {
     return ret;
 }
 
-void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
+void Board::generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const {
 
     if (FLAGS_WPLAYER(flags_)) {  // WHITE; moves go UP in rank
 
@@ -288,11 +294,10 @@ void Board::generatePawnMoves(vector<Move> *dest, int rk, int offs) const {
     }
 }
 
-void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
-    pc_t killpc;
+void Board::generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKNIGHT : BKNIGHT;
+    pc_t killpc;
 
-    const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
     for (const vector<int8_t> &mv : knightMoves) {
         if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
             killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xf;
@@ -307,11 +312,10 @@ void Board::generateKnightMoves(vector<Move> *dest, int rk, int offs) const {
     }
 }
 
-void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
-    pc_t killpc;
+void Board::generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WBISHOP : BBISHOP;
+    pc_t killpc;
 
-    const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
     for (int i = 0; i < 4; ++i) {  // 4 diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along diagonal
             if (ISPOS2(rk + CUR_BISHOP_MOVE[0], offs + CUR_BISHOP_MOVE[1])) {  // in bounds
@@ -331,11 +335,10 @@ void Board::generateBishopMoves(vector<Move> *dest, int rk, int offs) const {
     }
 }
 
-void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
-    pc_t killpc;
+void Board::generateRookMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WROOK : BROOK;
+    pc_t killpc;
 
-    const vector<vector<int8_t>> &rookMoves = moves[WROOK];
     for (int i = 0; i < 4; ++i) {  // 4 laterals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lateral
             if (ISPOS2(rk + CUR_ROOK_MOVE[0], offs + CUR_ROOK_MOVE[1])) {  // in bounds
@@ -355,11 +358,10 @@ void Board::generateRookMoves(vector<Move> *dest, int rk, int offs) const {
     }
 }
 
-void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
-    pc_t killpc;
+void Board::generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WQUEEN : BQUEEN;
+    pc_t killpc;
 
-    const vector<vector<int8_t>> &queenMoves = moves[WQUEEN];
     for (int i = 0; i < 8; ++i) {  // 8 laterals / diagonals
         for (int j = 0; j < 7; ++j) {  // 7 max possible moves along lat / diag
             if (ISPOS2(rk + CUR_QUEEN_MOVE[0], offs + CUR_QUEEN_MOVE[1])) {  // in bounds
@@ -379,12 +381,11 @@ void Board::generateQueenMoves(vector<Move> *dest, int rk, int offs) const {
     }
 }
 
-void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
-    pc_t killpc;
+void Board::generateKingMoves(vector<Move> *dest, const int rk, const int offs) const {
     const pc_t frompc = FLAGS_WPLAYER(flags_) ? WKING : BKING;
+    pc_t killpc;
 
     // NORMAL KING MOVES
-    const vector<vector<int8_t>> &kingMoves = moves[WKING];
     for (const vector<int8_t> &mv : kingMoves) {
         if (ISPOS2(rk + mv[0], offs + mv[1])) {  // in bounds
             killpc = (ranks_[rk + mv[0]] >> ((offs + mv[1]) * 4)) & 0xf;
@@ -405,8 +406,8 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs+1) * 4)) & 0xf) == NOPC)  // f1 empty
         && (((ranks_[rk] >> ((offs+2) * 4)) & 0xf) == NOPC)  // g1 empty
         && !hit(rk, offs, false)       // king not in check
-        && !hit(rk, offs+1, false)     // f1 not hit
-        && !hit(rk, offs+2, false)) {  // g1 not hit
+        && !hit(rk, offs+1, false)) {  // f1 not hit
+//        && !hit(rk, offs+2, false)) {  // g1 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
@@ -415,8 +416,8 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs-2) * 4)) & 0xf) == NOPC)  // c1 empty
         && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b1 empty
         && !hit(rk, offs, false)       // king not in check
-        && !hit(rk, offs-1, false)     // d1 not hit
-        && !hit(rk, offs-2, false)) {  // c1 not hit
+        && !hit(rk, offs-1, false)) {  // d1 not hit
+//        && !hit(rk, offs-2, false)) {  // c1 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
@@ -426,8 +427,8 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs+1) * 4)) & 0xf) == NOPC)  // f8 empty
         && (((ranks_[rk] >> ((offs+2) * 4)) & 0xf) == NOPC)  // g8 empty
         && !hit(rk, offs, true)       // king not in check
-        && !hit(rk, offs+1, true)     // f8 not hit
-        && !hit(rk, offs+2, true)) {  // g8 not hit
+        && !hit(rk, offs+1, true)) {  // f8 not hit
+//        && !hit(rk, offs+2, true)) {  // g8 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
@@ -436,149 +437,124 @@ void Board::generateKingMoves(vector<Move> *dest, int rk, int offs) const {
         && (((ranks_[rk] >> ((offs-2) * 4)) & 0xf) == NOPC)  // c8 empty
         && (((ranks_[rk] >> ((offs-3) * 4)) & 0xf) == NOPC)  // b8 empty
         && !hit(rk, offs, true)       // king not in check
-        && !hit(rk, offs-1, true)     // d8 not hit
-        && !hit(rk, offs-2, true)) {  // c8 not hit
+        && !hit(rk, offs-1, true)) {  // d8 not hit
+//        && !hit(rk, offs-2, true)) {  // c8 not hit
             dest->push_back(Move(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
     }
 }
 
-bool Board::hit(int rk, int offs, bool white) const {
+bool Board::hit(const int rk, const int offs, const bool white) const {
 
-    // since we are doing radius 1 checks disjointly from radius 2+ checks,
+    // since we are doing radius 1 checks disjoint from radius 2+ checks,
     // we need to make sure blocking pieces at rad1 block the corresponding
     // diagonal / lateral at rad2+. We keep track of this with the following
     // bit array, where bit 0 is UP, bit 1 is UR, bit 2 is RT, bit 3 is DR, etc.
     uint8_t blocks = 0;
 
-    if (white) {  // looking for white pieces
+    if (_hitSingle(rk, offs, white, blocks)) {
+        return true;
+    }
 
-        // PAWNS AND OTHER SINGLE DIAGONAL ATTACKERS
-        LOOKINGFOR4(rk-1, offs+1, WPAWN, WBISHOP, WQUEEN, WKING, blocks |= (1 << 3));
-        LOOKINGFOR4(rk-1, offs-1, WPAWN, WBISHOP, WQUEEN, WKING, blocks |= (1 << 5));
+    if (_hitKnight(rk, offs, white)) {
+        return true;
+    }
 
-        // NON-PAWN SINGLE DIAGONAL ATTACKERS
-        LOOKINGFOR3(rk+1, offs+1, WBISHOP, WQUEEN, WKING, blocks |= (1 << 1));
-        LOOKINGFOR3(rk+1, offs-1, WBISHOP, WQUEEN, WKING, blocks |= (1 << 7));
+    if (_hitDiagonal(rk, offs, white, blocks)) {
+        return true;
+    }
 
-        // SINGLE LATERAL ATTACKERS
-        LOOKINGFOR3(rk+1, offs, WROOK, WQUEEN, WKING, blocks |= (1 << 0));
-        LOOKINGFOR3(rk, offs+1, WROOK, WQUEEN, WKING, blocks |= (1 << 2));
-        LOOKINGFOR3(rk-1, offs, WROOK, WQUEEN, WKING, blocks |= (1 << 4));
-        LOOKINGFOR3(rk, offs-1, WROOK, WQUEEN, WKING, blocks |= (1 << 6));
+    if (_hitLateral(rk, offs, white, blocks)) {
+        return true;
+    }
 
-        // KNIGHT ATTACKERS
-        const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
-        for (const vector<int8_t> &mv : knightMoves) {
-            LOOKINGFOR1(rk+mv[0], offs+mv[1], WKNIGHT, ;);
+    return false;
+}
+
+bool Board::_hitSingle(const int rk, const int offs, const bool white, uint8_t &blocks) const {
+    // switch between black and white pieces using the 6 constant offset
+    const int rk_offs = (white) ? 1 : -1;
+    const int pc_offs = (white) ? 0 : 6;
+
+    pc_t attacker;
+
+    // PAWNS AND OTHER SINGLE DIAGONAL ATTACKERS
+    LOOKINGFOR4(rk-rk_offs, offs+1, WPAWN + pc_offs, WBISHOP + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << (2+rk_offs)));
+    LOOKINGFOR4(rk-rk_offs, offs-1, WPAWN + pc_offs, WBISHOP + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << (6-rk_offs)));
+
+    // NON-PAWN SINGLE DIAGONAL ATTACKERS
+    LOOKINGFOR3(rk+rk_offs, offs+1, WBISHOP + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << (2-rk_offs)));
+    LOOKINGFOR3(rk+rk_offs, offs-1, WBISHOP + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << (6+rk_offs)));
+
+    // SINGLE LATERAL ATTACKERS
+    LOOKINGFOR3(rk+1, offs, WROOK + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << 0));
+    LOOKINGFOR3(rk, offs+1, WROOK + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << 2));
+    LOOKINGFOR3(rk-1, offs, WROOK + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << 4));
+    LOOKINGFOR3(rk, offs-1, WROOK + pc_offs, WQUEEN + pc_offs, WKING + pc_offs, blocks |= (1 << 6));
+
+    return false;
+}
+
+bool Board::_hitKnight(const int rk, const int offs, const bool white) const {
+    const int pc_offs = (white) ? 0 : 6;
+
+    pc_t attacker;
+
+    // KNIGHT ATTACKERS
+    for (const vector<int8_t> &mv : knightMoves) {
+        LOOKINGFOR1(rk+mv[0], offs+mv[1], WKNIGHT + pc_offs, ;);
+    }
+
+    return false;
+}
+
+bool Board::_hitDiagonal(const int rk, const int offs, const bool white, uint8_t &blocks) const {
+    const int pc_offs = (white) ? 0 : 6;
+    pc_t attacker;
+
+    // DIAGONAL ATTACKERS
+    for (int i = 0; i < 4; ++i) {  // 4 diagonals
+        if (blocks & (1 << (i * 2 + 1))) {  // if single blocker from above, skip diagonal
+            continue;
         }
-
-        pc_t attacker;
-
-        // DIAGONAL ATTACKERS
-        const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
-        for (int i = 0; i < 4; ++i) {  // 4 diagonals
-            if (blocks & (1 << (i * 2 + 1))) {  // if single blocker from above, skip diagonal
-                continue;
-            }
-            for (int j = 1; j < 7; ++j) {  // 7 squares per diagonal, exclude first one
-                if (ISPOS2(rk+CUR_BISHOP_MOVE[0], offs+CUR_BISHOP_MOVE[1])) {
-                    attacker = ((ranks_[rk+CUR_BISHOP_MOVE[0]]) >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
-                    if (attacker == WBISHOP || attacker == WQUEEN) {  // hit on diagonal
-                        return true;
-                    } else if (attacker != NOPC) {  // no hit but diagonal blocked; cont to next diagonal
-                        j = 7;
-                    }
-                } else {  // ran out of bounds; continue to next diagonal
-                    j = 7;
+        for (int j = 1; j < 7; ++j) {  // 7 squares per diagonal, exclude first one
+            if (ISPOS2(rk+CUR_BISHOP_MOVE[0], offs+CUR_BISHOP_MOVE[1])) {
+                attacker = ((ranks_[rk+CUR_BISHOP_MOVE[0]]) >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
+                if (attacker == WBISHOP + pc_offs || attacker == WQUEEN + pc_offs) {  // hit on diagonal
+                    return true;
+                } else if (attacker != NOPC) {  // no hit but diagonal blocked; cont to next diagonal
+                    break;
                 }
+            } else {  // ran out of bounds; continue to next diagonal
+                break;
             }
         }
+    }
 
-        // LATERAL ATTACKERS
-        const vector<vector<int8_t>> &rookMoves = moves[WROOK];
-        for (int i = 0; i < 4; ++i) {  // 4 laterals
-            if (blocks & (1 << (i * 2))) {  // if single blocker from above, skip lateral
-                continue;
-            }
-            for (int j = 1; j < 7; ++j) {  // 7 squares per lateral, exclude first one
-                if (ISPOS2(rk+CUR_ROOK_MOVE[0], offs+CUR_ROOK_MOVE[1])) {
-                    attacker = ((ranks_[rk+CUR_ROOK_MOVE[0]]) >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
-                    if (attacker == WROOK || attacker == WQUEEN) {  // hit on lateral
-                        return true;
-                    } else if (attacker != NOPC) {  // no hit but lateral blocked; cont to next lateral
-                        j = 7;
-                    }
-                } else {  // ran out of bounds; continue to next lateral
-                    j = 7;
+    return false;
+}
+
+bool Board::_hitLateral(const int rk, const int offs, const bool white, uint8_t &blocks) const {
+    const int pc_offs = (white) ? 0 : 6;
+    pc_t attacker;
+
+    // LATERAL ATTACKERS
+    for (int i = 0; i < 4; ++i) {  // 4 laterals
+        if (blocks & (1 << (i * 2))) {  // if single blocker from above, skip lateral
+            continue;
+        }
+        for (int j = 1; j < 7; ++j) {  // 7 squares per lateral, exclude first one
+            if (ISPOS2(rk+CUR_ROOK_MOVE[0], offs+CUR_ROOK_MOVE[1])) {
+                attacker = ((ranks_[rk+CUR_ROOK_MOVE[0]]) >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
+                if (attacker == WROOK + pc_offs || attacker == WQUEEN + pc_offs) {  // hit on lateral
+                    return true;
+                } else if (attacker != NOPC) {  // no hit but lateral blocked; cont to next lateral
+                    break;
                 }
+            } else {  // ran out of bounds; continue to next lateral
+                break;
             }
         }
-
-    } else {  // looking for black pieces
-
-        // PAWNS AND OTHER SINGLE DIAGONAL ATTACKERS
-        LOOKINGFOR4(rk+1, offs+1, BPAWN, BBISHOP, BQUEEN, BKING, blocks |= (1 << 1));
-        LOOKINGFOR4(rk+1, offs-1, BPAWN, BBISHOP, BQUEEN, BKING, blocks |= (1 << 7));
-
-        // NON-PAWN SINGLE DIAGONAL ATTACKERS
-        LOOKINGFOR3(rk-1, offs+1, BBISHOP, BQUEEN, BKING, blocks |= (1 << 3));
-        LOOKINGFOR3(rk-1, offs-1, BBISHOP, BQUEEN, BKING, blocks |= (1 << 5));
-
-        // SINGLE LATERAL ATTACKERS
-        LOOKINGFOR3(rk+1, offs, BROOK, BQUEEN, BKING, blocks |= (1 << 0));
-        LOOKINGFOR3(rk, offs+1, BROOK, BQUEEN, BKING, blocks |= (1 << 2));
-        LOOKINGFOR3(rk-1, offs, BROOK, BQUEEN, BKING, blocks |= (1 << 4));
-        LOOKINGFOR3(rk, offs-1, BROOK, BQUEEN, BKING, blocks |= (1 << 6));
-
-        // KNIGHT ATTACKERS
-        const vector<vector<int8_t>> &knightMoves = moves[WKNIGHT];
-        for (const vector<int8_t> &mv : knightMoves) {
-            LOOKINGFOR1(rk+mv[0], offs+mv[1], BKNIGHT, ;);
-        }
-
-        pc_t attacker;
-
-        // DIAGONAL ATTACKERS
-        const vector<vector<int8_t>> &bishopMoves = moves[WBISHOP];
-        for (int i = 0; i < 4; ++i) {  // 4 diagonals
-            if (blocks & (1 << (i * 2 + 1))) {  // if single blocker from above, skip diagonal
-                continue;
-            }
-            for (int j = 1; j < 7; ++j) {  // 7 squares per diagonal, exclude first one
-                if (ISPOS2(rk+CUR_BISHOP_MOVE[0], offs+CUR_BISHOP_MOVE[1])) {
-                    attacker = ((ranks_[rk+CUR_BISHOP_MOVE[0]]) >> ((offs+CUR_BISHOP_MOVE[1]) * 4)) & 0xf;
-                    if (attacker == BBISHOP || attacker == BQUEEN) {  // hit on diagonal
-                        return true;
-                    } else if (attacker != NOPC) {  // no hit but diagonal blocked; cont to next diagonal
-                        j = 7;
-                    }
-                } else {  // ran out of bounds; continue to next diagonal
-                    j = 7;
-                }
-            }
-        }
-
-        // LATERAL ATTACKERS
-        const vector<vector<int8_t>> &rookMoves = moves[WROOK];
-        for (int i = 0; i < 4; ++i) {  // 4 laterals
-            if (blocks & (1 << (i * 2))) {  // if single blocker from above, skip lateral
-                continue;
-            }
-            for (int j = 1; j < 7; ++j) {  // 7 squares per lateral, exclude first one
-                if (ISPOS2(rk+CUR_ROOK_MOVE[0], offs+CUR_ROOK_MOVE[1])) {
-                    attacker = ((ranks_[rk+CUR_ROOK_MOVE[0]]) >> ((offs+CUR_ROOK_MOVE[1]) * 4)) & 0xf;
-                    if (attacker == BROOK || attacker == BQUEEN) {  // hit on lateral
-                        return true;
-                    } else if (attacker != NOPC) {  // no hit but lateral blocked; cont to next lateral
-                        j = 7;
-                    }
-                } else {  // ran out of bounds; continue to next lateral
-                    j = 7;
-                }
-            }
-        }
-
     }
 
     return false;
