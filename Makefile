@@ -49,6 +49,11 @@ TESTS = $(CHESS_BIN)/moveTest        \
 
 LIBS = $(CHESS_BIN)/libchess.a
 
+test: $(TESTS)
+	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest
+
+lib: $(LIBS)
+
 all: $(TESTS) $(LIBS)
 
 .PHONY: clean

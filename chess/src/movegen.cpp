@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <cassert>
 
 #include "board.h"
 #include "move.h"
