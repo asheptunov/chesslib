@@ -1,8 +1,8 @@
-#pragma once
+#ifndef ALGNOT_H
+#define ALGNOT_H
 
 #include "defs.h"
-
-namespace game {
+#include "move.h"
 
 /**
  * Parses a move from a string and returns extracted move properties. Returns with
@@ -17,6 +17,6 @@ namespace game {
  * @param kpc killpc
  * @return 0 on success; nonzero on failure.
  */
-int parseAlgNot(const char *str, pos_t *fps, pos_t *tps, pos_t *kps, pc_t *fpc, pc_t *tpc, pc_t *kpc);
+int algnot_parse(const char *str, move_t *move);
 
-}  // namespace game
+#endif  // ALGNOT_H

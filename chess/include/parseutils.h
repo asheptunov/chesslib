@@ -1,16 +1,15 @@
-#pragma once
-
-#include <string>
+#ifndef PARSEUTILS_H
+#define PARSEUTILS_H
 
 #include "defs.h"
+#include "arraylist.h"
 
-namespace game {
+alst_t *piece_char_map;
+void init();
 
-using std::string;
+pos_t pos_from_str(const char *label);
+char *pos_to_str(const pos_t pos);
+pc_t piece_from_char(const char label);
+char *piece_to_str(const pc_t piece);
 
-pos_t posFromStr(const char *label);
-string posToStr(const pos_t pos);
-pc_t pieceFromChar(const char label);
-char pieceToChar(const pc_t piece);
-
-}  // namespace game
+#endif  // PARSEUTILS_H

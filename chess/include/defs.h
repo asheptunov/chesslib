@@ -1,8 +1,7 @@
-#pragma once
+#ifndef DEFS_H
+#define DEFS_H
 
-#include <map>
-
-namespace game {
+#include <stdint.h>
 
 // board positions (65 values; 7 bits)
 typedef uint8_t pos_t;
@@ -111,9 +110,4 @@ typedef uint8_t pc_t;
 
 #define STARTING_BOARD "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
 
-static std::map<pc_t, char> pieceFromCharMap =
-    {{'P', WPAWN}, {'N', WKNIGHT}, {'B', WBISHOP}, {'R', WROOK}, {'Q', WQUEEN}, {'K', WKING}, {'p', BPAWN}, {'n', BKNIGHT}, {'b', BBISHOP}, {'r', BROOK}, {'q', BQUEEN}, {'k', BKING}};
-static std::map<char, pc_t> pieceToCharMap =
-    {{WPAWN, 'P'}, {WKNIGHT, 'N'}, {WBISHOP, 'B'}, {WROOK, 'R'}, {WQUEEN, 'Q'}, {WKING, 'K'}, {BPAWN, 'p'}, {BKNIGHT, 'n'}, {BBISHOP, 'b'}, {BROOK, 'r'}, {BQUEEN, 'q'}, {BKING, 'k'}};
-
-}  // namespace game
+#endif  // DEFS_H
