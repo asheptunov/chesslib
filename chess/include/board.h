@@ -1,124 +1,81 @@
-#pragma once
-
-#include <cstdint>
-#include <string>
-#include <vector>
+#ifndef BOARD_H
+#define BOARD_H
 
 #include "defs.h"
 #include "move.h"
+#include "arraylist.h"
 
-using std::string;
-using std::vector;
+typedef struct {
+    uint32_t ranks[8];
+    uint32_t flags;
+} board_t;
 
-namespace game {
-
-class Board {
-   public:
-    /**
+/**
      * Constructs a board from the given string, in Forsyth-Edwards notation. If no
      * string is specified, the starting position for chess is used.
      */
-    Board(const char *fen = STARTING_BOARD);
+board_t *board_make(const char *fen);
 
-    /**
+/**
      * Creates a board from another. The other board is deep copied, resulting in
      * two logically equal but physically independent boards.
      * 
      * @param other the other board
      */
-    Board(const Board &other);
+board_t *board_copy(const board_t *other);
 
-    /**
+/**
      * Destructs this board.
      */
-    ~Board();
+void board_free(const board_t *other);
 
-    /**
-     * Assigns this board to the same state as another. The other board is deep
-     * copied, resulting in two logically equal but physically independent boards,
-     * as with
-     * @link Board::Board(const &Board::Board) the copy constructor.
-     * 
-     * @param other the other board
-     * @return *this
-     */
-    Board &operator=(const Board &other);
-
-    /**
+/**
      * Applies the given move to this board. Assumes that the move was previously
      * returned by
      * @link Board::generateMoves generateMoves.
      * 
      * @param move the move to apply
      */
-    void applyMove(const Move &move);
+void board_apply_move(board_t *board, const move_t move);
 
-    /**
+/**
      * Generates and returns a vector of moves that the active player can make,
      * according to standard chess rules. If the active player is under checkmate,
      * returns an empty vector.
      * 
      * @return the vector of possible moves
      */
-    vector<Move> generateMoves() const;
+alst_t board_get_moves(const board_t *board);
 
-    /**
+/**
      * Returns true if the game has ended in a mate, or specifically when the active player's king is in check and
      * no moves remain.
      *
      * @return true iff the game has ended in a mate
      */
-    bool mate() const;
+int board_is_mate(const board_t *board);
 
-    /**
+/**
      * Returns true if the game has ended in a stalemate, false otherwise.
      *
      * @return true iff the game has ended in a stalemate
      */
-    bool stalemate() const;
+int board_is_stalemate(const board_t *board);
 
-    /**
+/**
      * Returns the Forsyth-Edwards notation for this board.
      * 
      * @return the FEN
      */
-    string toFen() const;
+char *board_to_fen(const board_t *board);
 
-    /**
+/**
      * Prints a console representation of the board to the given output stream.
      * 
      * @param os the output stream to print to
      * @param board the board to print
      * @return the output stream
      */
-    friend ostream &operator<<(ostream &os, const Board &board);
+char *board_to_tui(const board_t *board);
 
-    /**
-     * Returns true if the specified position is hit by any piece of the given
-     * color, false otherwise. Takes rank in [0,7] corresponding to [1,8] and
-     * offset in [0,7] corresponding to ['a','h']. Hit means direct hit, not
-     * en passant takes. One should use this for seeing if a position is in check,
-     * so en passant takes would be irrelevant.
-     * 
-     * @return true if the position is hit, false otherwise
-     */
-    bool hit(const int rk, const int offs, const bool white) const;
-
-//    private:
-    uint32_t ranks_[8];
-    uint32_t flags_;
-
-   private:
-    void _generatePawnMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void _generateKnightMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void _generateBishopMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void _generateRookMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void _generateQueenMoves(vector<Move> *dest, const int rk, const int offs) const;
-    void _generateKingMoves(vector<Move> *dest, const int rk, const int offs) const;
-    bool _hitSingle(const int rk, const int offs, const bool white, uint8_t &blocks) const;
-    bool _hitKnight(const int rk, const int offs, const bool white) const;
-    bool _hitDiagonal(const int rk, const int offs, const bool white, uint8_t &blocks) const;
-    bool _hitLateral(const int rk, const int offs, const bool white, uint8_t &blocks) const;
-};
-
-}  // namespace game
+#endif  // BOARD_H

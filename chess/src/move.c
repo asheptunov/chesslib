@@ -4,13 +4,21 @@
 #include "algnot.h"
 #include "parseutils.h"
 
-move_t move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t topc, pc_t killpc) {
-    return (move_t) {frompos, topos, killpos, frompc, topc, killpc};
+move_t *move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t topc, pc_t killpc) {
+    move_t *move = (move_t *) malloc(sizeof(move_t));
+    move->frompos = frompos;
+    move->topos = topos;
+    move->killpos = killpos;
+    move->frompc = frompc;
+    move->topc = topc;
+    move->killpc = killpc;
+    return move;
+    // return (move_t) {frompos, topos, killpos, frompc, topc, killpc};
 }
 
-move_t move_make_algnot(const char *algnot) {
-    move_t ret;
-    if (!algnot_parse(algnot, &ret)) {
+move_t *move_make_algnot(const char *algnot) {
+    move_t *ret = (move_t *) malloc(sizeof(move_t));
+    if (!algnot_parse(algnot, ret)) {
         fprintf(stderr, "move_make_algnot failure to parse string %s", algnot);
         exit(1);
     }

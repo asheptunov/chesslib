@@ -12,9 +12,9 @@ typedef struct {
     pc_t killpc;
 } move_t;
 
-move_t move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t topc, pc_t killpc);
+move_t *move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t topc, pc_t killpc);
 
-move_t move_make_algnot(const char *algnot);
+move_t *move_make_algnot(const char *algnot);
 
 void move_free(move_t move);
 
