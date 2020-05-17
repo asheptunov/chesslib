@@ -169,6 +169,7 @@ alst_t board_get_moves(const board_t *board) {
             if (i != j) {  // if didn't swap with self, consider ith position again on next 
                 --i;
             }
+            ++j;
         }
         free(board_future);
     }

@@ -27,21 +27,22 @@ move_t *move_make_algnot(const char *algnot) {
 }
 
 void move_free(move_t *move) {
+    free(move);
 }
 
 int move_cmp(const move_t *a, const move_t *b) {
     if (a->frompc != b->frompc) {
-        return a->frompc < b->frompc;
+        return a->frompc - b->frompc;
     } else if (a->frompos != b->frompos) {
-        return a->frompos < b->frompos;
+        return a->frompos - b->frompos;
     } else if (a->topc != b->topc) {
-        return a->topc < b->topc;
+        return a->topc - b->topc;
     } else if (a->topos != b->topos) {
-        return a->topos < b->topos;
+        return a->topos - b->topos;
     } else if (a->killpc != b->killpc) {
-        return a->killpc < b->killpc;
+        return a->killpc - b->killpc;
     } else if (a->killpos != b->killpos) {
-        return a->killpos < b->killpos;
+        return a->killpos - b->killpos;
     } else {  // equal
         return 0;
     }
@@ -90,12 +91,19 @@ char *move_str(const move_t *move) {
     }
 
     char *ret = (char *) malloc(16 * sizeof(char));
-    // strcpy(ret, piece_to_str(move->frompc));
+    ret[0] = '\0';
+    // strcat(ret, piece_to_str(move->frompc));
     strcat(ret, pos_to_str(move->frompos));
-    if (move_is_cap) strcat(ret, "x");
+    if (move_is_cap(move)) {
+        strcat(ret, "x");
+    }
     // strcat(ret, piece_to_str(move->killpc));
     strcat(ret, pos_to_str(move->topos));
-    if (move_is_ep(move)) strcat(ret, "e.p.");
-    if (move_is_promo(move)) strcat(ret, piece_to_str(move->topc));
+    if (move_is_ep(move)) {
+        strcat(ret, "e.p.");
+    }
+    if (move_is_promo(move)) {
+        strcat(ret, piece_to_str(move->topc));
+    }
     return ret;
 }

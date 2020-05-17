@@ -14,6 +14,8 @@ using std::map;
 using std::string;
 using std::vector;
 using std::strcpy;
+using std::cout;
+using std::endl;
 
 // move list is tsv (from excel)
 static map <string, string> genCases =

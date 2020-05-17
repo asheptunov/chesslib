@@ -60,7 +60,7 @@ TEST(MoveTest, AlgNotConstruct) {
         EXPECT_EQ(move_is_ep(m1), move_is_ep(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_promo(m1), move_is_promo(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_castle(m1), move_is_castle(m2)) << "diff at " << it->second[0];
-        EXPECT_EQ(move_str(m1), move_str(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(strcmp(move_str(m1), move_str(m2)), 0) << "diff at " << it->second[0];
     }
 }
 
@@ -95,8 +95,7 @@ TEST(MoveTest, CastleType) {
 TEST(MoveTest, Print) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        std::ostringstream os;
-        EXPECT_EQ(move_str(m), it->second[0]) << "diff at " << it->second[0];
+        EXPECT_EQ(strcmp(move_str(m), it->second[0].c_str()), 0) << "diff at " << it->second[0];
     }
 }
 
