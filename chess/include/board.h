@@ -36,7 +36,7 @@ void board_free(const board_t *other);
      * 
      * @param move the move to apply
      */
-void board_apply_move(board_t *board, const move_t move);
+void board_apply_move(board_t *board, const move_t *move);
 
 /**
      * Generates and returns a vector of moves that the active player can make,
@@ -77,5 +77,16 @@ char *board_to_fen(const board_t *board);
      * @return the output stream
      */
 char *board_to_tui(const board_t *board);
+
+/**
+     * Returns true if the specified position is hit by any piece of the given
+     * color, false otherwise. Takes rank in [0,7] corresponding to [1,8] and
+     * offset in [0,7] corresponding to ['a','h']. Hit means direct hit, not
+     * en passant takes. One should use this for seeing if a position is in check,
+     * so en passant takes would be irrelevant.
+     * 
+     * @return true if the position is hit, false otherwise
+     */
+int _board_hit(const board_t *board, const int rk, const int offs, const int white);
 
 #endif  // BOARD_H

@@ -12,22 +12,23 @@ CHESS_TST = $(CHESS_ROOT)/test
 # ----------------------
 # >>>> DEPENDENCIES <<<<
 # ----------------------
-# GTEST_ROOT = $(CHESS_LIB)/googletest
-# GTEST_HDR = $(GTEST_ROOT)/include
-# GTEST_LIB = $(GTEST_ROOT)/lib
-# GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
-#              $(GTEST_LIB)/libgtest_main.a \
-#              $(GTEST_LIB)/libgmock.a      \
-#              $(GTEST_LIB)/libgmock_main.a
+GTEST_ROOT = $(CHESS_LIB)/googletest
+GTEST_HDR = $(GTEST_ROOT)/include
+GTEST_LIB = $(GTEST_ROOT)/lib
+GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
+             $(GTEST_LIB)/libgtest_main.a \
+             $(GTEST_LIB)/libgmock.a      \
+             $(GTEST_LIB)/libgmock_main.a
 
 # -----------------------------
 # >>>> COMPILER PROPERTIES <<<<
 # -----------------------------
-# CXX = g++
-# CPPFLAGS = -isystem $(GTEST_HDR)
-# CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
 C = gcc
-CFLAGS = -g -Wall -Wextra -std=c99
+CFLAGS = -g -Wall -Wextra -std=c99 -D_XOPEN_SOURCE=700
+
+CXX = g++
+CPPFLAGS = -isystem $(GTEST_HDR)
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
 
 # --------------------------
 # >>>> LEXER PROPERTIES <<<<
@@ -38,29 +39,25 @@ LEXFLAGS = --align --fast --verbose  # --debug
 # -----------------------------
 # >>>> ARCHIVER PROPERTIES <<<<
 # -----------------------------
-
 AR = ar
 ARFLAGS = -rv
 
 # -------------------------
 # >>>> TARGET BINARIES <<<<
 # -------------------------
-# TESTS = $(CHESS_BIN)/moveTest        \
+TESTS = $(CHESS_BIN)/moveTest        \
         $(CHESS_BIN)/boardTest       \
-        $(CHESS_BIN)/movegenTest     \
+        $(CHESS_BIN)/arraylistTest   \
+				$(CHESS_BIN)/movegenTest
 
-TESTS = $(CHESS_BIN)/arraylistTest
-
-# LIBS = $(CHESS_BIN)/libchess.a
+LIBS = $(CHESS_BIN)/libchess.a
 
 test: $(TESTS)
-	# $(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest
-	$(CHESS_BIN)/arraylistTest
+	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest $(CHESS_BIN)/arraylistTest
 
-# lib: $(LIBS)
+lib: $(LIBS)
 
-# all: $(TESTS) $(LIBS)
-all: $(TESTS)
+all: $(TESTS) $(LIBS)
 
 .PHONY: clean
 
@@ -70,59 +67,56 @@ clean:
 # -------------------
 # >>>> C RECIPES <<<<
 # -------------------
-
 $(CHESS_OBJ)/src/algnot.c: $(CHESS_SRC)/algnot.flex
 	$(LEX) $(LEXFLAGS) -o $@ $<
 
 # ------------------------
 # >>>> OBJECT RECIPES <<<<
 # ------------------------
+$(CHESS_OBJ)/src/algnot.o: $(CHESS_OBJ)/src/algnot.c $(CHESS_HDR)
+	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
 
-# $(CHESS_OBJ)/src/algnot.o: $(CHESS_OBJ)/src/algnot.c $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c -o $@ $<
+$(CHESS_OBJ)/src/parseutils.o: $(CHESS_SRC)/parseutils.c $(CHESS_HDR)
+	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
 
-# $(CHESS_OBJ)/src/parseutils.o: $(CHESS_SRC)/parseutils.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c -o $@ $<
+$(CHESS_OBJ)/src/move.o: $(CHESS_SRC)/move.c $(CHESS_HDR)
+	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
 
-# $(CHESS_OBJ)/src/move.o: $(CHESS_SRC)/move.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c -o $@ $<
-
-# $(CHESS_OBJ)/src/board.o: $(CHESS_SRC)/board.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c -o $@ $<
-
-# $(CHESS_OBJ)/src/movegen.o: $(CHESS_SRC)/movegen.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -c -o $@ $<
-
-# $(CHESS_OBJ)/test/boardTest.o: $(CHESS_TST)/boardTest.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
-
-# $(CHESS_OBJ)/test/moveTest.o: $(CHESS_TST)/moveTest.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
-
-# $(CHESS_OBJ)/test/movegenTest.o: $(CHESS_TST)/movegenTest.cpp $(CHESS_HDR)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
+$(CHESS_OBJ)/src/board.o: $(CHESS_SRC)/board.c $(CHESS_HDR)
+	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
 
 $(CHESS_OBJ)/src/arraylist.o: $(CHESS_SRC)/arraylist.c $(CHESS_HDR)
 	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
 
-$(CHESS_OBJ)/test/arraylistTest.o: $(CHESS_TST)/arraylistTest.c $(CHESS_HDR)
+$(CHESS_OBJ)/src/movegen.o: $(CHESS_SRC)/movegen.c $(CHESS_HDR)
 	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
+
+$(CHESS_OBJ)/test/boardTest.o: $(CHESS_TST)/boardTest.cpp $(CHESS_HDR)
+	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
+
+$(CHESS_OBJ)/test/moveTest.o: $(CHESS_TST)/moveTest.cpp $(CHESS_HDR)
+	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
+
+$(CHESS_OBJ)/test/arraylistTest.o: $(CHESS_TST)/arraylistTest.cpp $(CHESS_HDR)
+	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
+
+$(CHESS_OBJ)/test/movegenTest.o: $(CHESS_TST)/movegenTest.cpp $(CHESS_HDR)
+	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
 
 # ------------------------
 # >>>> BINARY RECIPES <<<<
 # ------------------------
+$(CHESS_BIN)/moveTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/test/moveTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# $(CHESS_BIN)/moveTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/test/moveTest.o $(GTEST_LIBS)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
+$(CHESS_BIN)/boardTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/boardTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# $(CHESS_BIN)/boardTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/boardTest.o $(GTEST_LIBS)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
+$(CHESS_BIN)/arraylistTest: $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/test/arraylistTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# $(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
-# 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
+$(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# $(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
-# 	$(AR) $(ARFLAGS) $@ $^
-
-$(CHESS_BIN)/arraylistTest: $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/test/arraylistTest.o
-	$(C) $(CFLAGS) $^ -o $@
+$(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+	$(AR) $(ARFLAGS) $@ $^

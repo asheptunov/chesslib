@@ -4,31 +4,7 @@
 #include "arraylist.h"
 #include "parseutils.h"
 
-alst_t *_piece_char_map;
-void _parse_utils_init();
-
-void _parse_utils_init() {
-    if (!_piece_char_map) {
-      _piece_char_map = (alst_t *) malloc(sizeof(alst_t));
-      if (!_piece_char_map) {
-          fprintf(stderr, "init malloc error");
-        exit(1);
-      }
-      *_piece_char_map = alst_make(12);
-      alst_append(_piece_char_map, (void *) 'P');
-      alst_append(_piece_char_map, (void *) 'N');
-      alst_append(_piece_char_map, (void *) 'B');
-      alst_append(_piece_char_map, (void *) 'R');
-      alst_append(_piece_char_map, (void *) 'Q');
-      alst_append(_piece_char_map, (void *) 'K');
-      alst_append(_piece_char_map, (void *) 'p');
-      alst_append(_piece_char_map, (void *) 'n');
-      alst_append(_piece_char_map, (void *) 'b');
-      alst_append(_piece_char_map, (void *) 'r');
-      alst_append(_piece_char_map, (void *) 'q');
-      alst_append(_piece_char_map, (void *) 'k');
-    }
-}
+const char *_piece_str_map[12] = {"P", "N", "B", "R", "Q", "K", "p", "n", "b", "r", "q", "k"};
 
 pos_t pos_from_str(const char *label) {
     if (*label == '-') {
@@ -54,16 +30,15 @@ char *pos_to_str(const pos_t pos) {
 }
 
 pc_t piece_from_char(const char label) {
-    _parse_utils_init();
-    size_t ret = alst_index_of(_piece_char_map, (void *) label);
-    return (ret == -1) ? NOPC : ((pc_t) ret);
+    // find index of label in the list
+    for (int i = 0; i < 12; ++i) {
+        if (*(_piece_str_map[i]) == label) {
+            return (pc_t) i;
+        }
+    }
+    return NOPC;
 }
 
-// caller responsible for freeing returned buffer
-char *piece_to_str(const pc_t piece) {
-    _parse_utils_init();
-    char *ret = (char *) malloc(2 * sizeof(char));
-    ret[0] = (piece >= WPAWN && piece <= BKING) ? (char) alst_get(_piece_char_map, (size_t) piece) : '-';
-    ret[1] = '\0';
-    return ret;
+const char *piece_to_str(const pc_t piece) {
+    return (piece >= WPAWN && piece <= BKING) ? _piece_str_map[piece] : "-";
 }

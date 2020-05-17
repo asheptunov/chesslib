@@ -4,9 +4,20 @@
 #include "board.h"
 #include "parseutils.h"
 
+// not in c on wsl; implement using malloc
+// implementation from https://stackoverflow.com/questions/46013382/c-strndup-implicit-declaration
+char *_strdup(const char *s) {
+    size_t size = strlen(s) + 1;
+    char *p = malloc(size);
+    if (p != NULL) {
+        memcpy(p, s, size);
+    }
+    return p;
+}
+
 board_t *board_make(const char *fen) {
     board_t *ret = (board_t *) malloc(sizeof(board_t));
-    char *fencpy = strdup(fen);  // mutability
+    char *fencpy = _strdup(fen);  // mutability
     char *board_p = strtok(fencpy, " ");  // split off board data
     char *player_p = strtok(NULL, " ");  // split off player data
     char *castling_p = strtok(NULL, " ");  // split off castling data
@@ -63,23 +74,24 @@ board_t *board_copy(const board_t *other) {
 }
 
 void board_free(const board_t *other) {
+    free((void *) other);
 }
 
-void board_apply_move(board_t *board, const move_t move) {
+void board_apply_move(board_t *board, const move_t *move) {
     // kill the target piece if the move is a capture
     if (move_is_cap(move)) {
-        int k_rk = move.killpos / 8;
-        int k_offs = move.killpc % 8;
+        int k_rk = move->killpos / 8;
+        int k_offs = move->killpc % 8;
         ZEROPOS(k_offs, board->ranks[k_rk]);
         SETPOS(k_offs, board->ranks[k_rk], NOPC);
     }
 
     // move the piece
-    int f_rk = move.frompos / 8;
-    int t_rk = move.topos / 8;
-    int f_offs = move.frompos % 8;
-    int t_offs = move.topos % 8;
-    MOVEPC(f_offs, t_offs, board->ranks[f_rk], board->ranks[t_rk], move.topc);
+    int f_rk = move->frompos / 8;
+    int t_rk = move->topos / 8;
+    int f_offs = move->frompos % 8;
+    int t_offs = move->topos % 8;
+    MOVEPC(f_offs, t_offs, board->ranks[f_rk], board->ranks[t_rk], move->topc);
 
     // also move the rook if castling
     switch (move_is_castle(move)) {
@@ -95,16 +107,16 @@ void board_apply_move(board_t *board, const move_t move) {
     }
 
     // update castling rights / bits if castled or made a move that voids castling
-    switch (move.frompc) {
+    switch (move->frompc) {
         case WROOK:
-            ZEROCASTLE2(board->flags, move.frompos == POS('a', 1) ? WQCASTLE : WKCASTLE);
+            ZEROCASTLE2(board->flags, move->frompos == POS('a', 1) ? WQCASTLE : WKCASTLE);
             break;
         case WKING:
             ZEROCASTLE2(board->flags, WKCASTLE);
             ZEROCASTLE2(board->flags, WQCASTLE);
             break;
         case BROOK:
-            ZEROCASTLE2(board->flags, move.frompos == POS('a', 8) ? BQCASTLE : BKCASTLE);
+            ZEROCASTLE2(board->flags, move->frompos == POS('a', 8) ? BQCASTLE : BKCASTLE);
             break;
         case BKING:
             ZEROCASTLE2(board->flags, BKCASTLE);
@@ -114,9 +126,9 @@ void board_apply_move(board_t *board, const move_t move) {
 
     // disable en passant rights / bits unless made a move that allows en passant
     SETEP(NOPOS, board->flags);
-    if ((move.frompc == WPAWN || move.frompc == BPAWN) \
-        && (abs(move.topos - move.frompos) == 16)) {
-        SETEP((move.frompos + move.topos) / 2, board->flags);
+    if ((move->frompc == WPAWN || move->frompc == BPAWN) \
+        && (abs(move->topos - move->frompos) == 16)) {
+        SETEP((move->frompos + move->topos) / 2, board->flags);
     }
 
     // flip players
@@ -124,10 +136,10 @@ void board_apply_move(board_t *board, const move_t move) {
     SETPLAYER(player, board->flags);
 
     // update king position if a king moved
-    if (move.frompc == WKING) {
-        SETWKING(move.topos, board->flags);
-    } else if (move.frompc == BKING) {
-        SETBKING(move.topos, board->flags);
+    if (move->frompc == WKING) {
+        SETWKING(move->topos, board->flags);
+    } else if (move->frompc == BKING) {
+        SETBKING(move->topos, board->flags);
     }
 
     // update Zobrist signature
@@ -137,10 +149,10 @@ void board_apply_move(board_t *board, const move_t move) {
 int board_is_mate(const board_t *board) {
     pos_t kingpos = FLAGS_WPLAYER(board->flags) ? FLAGS_WKING(board->flags) : FLAGS_BKING(board->flags);
 
-    bool incheck = _board_hit(board, kingpos / 8, kingpos % 8, FLAGS_BPLAYER(board->flags));
+    int incheck = _board_hit(board, kingpos / 8, kingpos % 8, FLAGS_BPLAYER(board->flags));
 
     if (!incheck) {  // do the easy stuff first
-        return false;
+        return 0;
     }
 
     return board_get_moves(board).len == 0;  // in check and no moves -> mate
@@ -149,10 +161,10 @@ int board_is_mate(const board_t *board) {
 int board_is_stalemate(const board_t *board) {
     pos_t kingpos = FLAGS_WPLAYER(board->flags) ? FLAGS_WKING(board->flags) : FLAGS_BKING(board->flags);
 
-    bool incheck = _board_hit(board, kingpos / 8, kingpos % 8, FLAGS_BPLAYER(board->flags));
+    int incheck = _board_hit(board, kingpos / 8, kingpos % 8, FLAGS_BPLAYER(board->flags));
 
     if (incheck) {  // do the easy stuff first
-        return false;
+        return 0;
     }
 
     return board_get_moves(board).len == 0;  // not in check and no moves -> stalemate
@@ -235,6 +247,7 @@ char *board_to_tui(const board_t *board) {
         }
         strcat(ret, "   ");  // board left/right padding
         strcat(ret, buf);  // rank label (1-8)
+        strcat(ret, "\n");
     }
     strcat(ret, "\n    a b c d e f g h");  // \n
     return ret;

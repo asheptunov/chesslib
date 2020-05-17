@@ -25,7 +25,4 @@ void *alst_get(alst_t *list, size_t i);
 // appends the value val at the end of the arraylist list
 void alst_append(alst_t *list, void *val);
 
-// returns the index of the first occurrence of value val in the arraylist list; returns -1 if the value doesn't occur
-size_t alst_index_of(alst_t *list, void *val);
-
 #endif  // ARRAYLIST_H

@@ -52,12 +52,3 @@ void alst_append(alst_t *list, void *val) {
   }
   list->data[list->len++] = val;
 }
-
-size_t alst_index_of(alst_t *list, void *val) {
-  for (size_t i = 0; i < list->len; ++i) {
-    if (list->data[i] == val) {
-      return i;
-    }
-  }
-  return -1;
-}

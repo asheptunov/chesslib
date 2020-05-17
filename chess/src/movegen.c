@@ -70,16 +70,6 @@
         blocker; \
     } \
 
-/**
-     * Returns true if the specified position is hit by any piece of the given
-     * color, false otherwise. Takes rank in [0,7] corresponding to [1,8] and
-     * offset in [0,7] corresponding to ['a','h']. Hit means direct hit, not
-     * en passant takes. One should use this for seeing if a position is in check,
-     * so en passant takes would be irrelevant.
-     * 
-     * @return true if the position is hit, false otherwise
-     */
-int _board_hit(const board_t *board, const int rk, const int offs, const int white);
 void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, const int offs);
 void _board_generateKnightMoves(const board_t *board, alst_t *dest, const int rk, const int offs);
 void _board_generateBishopMoves(const board_t *board, alst_t *dest, const int rk, const int offs);
@@ -90,7 +80,6 @@ int _board_hitSingle(const board_t *board, const int rk, const int offs, const i
 int _board_hitKnight(const board_t *board, const int rk, const int offs, const int white);
 int _board_hitDiagonal(const board_t *board, const int rk, const int offs, const int white, uint8_t *blocks);
 int _board_hitLateral(const board_t *board, const int rk, const int offs, const int white, uint8_t *blocks);
-int _move_puts_king_in_check(const board_t *board, const move_t move, const pos_t kingpos);
 
 typedef struct {
     int8_t dx;
@@ -106,15 +95,6 @@ _move_delta_t king_moves[8] = {{UP, 0}, {DN, 0}, {0, RT}, {0, LT}, {UP, RT}, {UP
 #define CUR_BISHOP_MOVE bishop_moves[i * 7 + j]
 #define CUR_ROOK_MOVE rook_moves[i * 7 + j]
 #define CUR_QUEEN_MOVE queen_moves[i * 7 + j]
-
-int _move_puts_king_in_check(const board_t *board, const move_t move, const pos_t kingpos) {
-    board_t *board_fut = board_copy(board);
-    board_apply_move(board_fut, move);
-    int player = FLAGS_BPLAYER(board->flags);  // 1 if current player is black, 0 if white
-    pc_t king =  FLAGS_BPLAYER(board->flags) ? BKING : WKING;  // king before applying
-    pos_t kingpos_fut = (move.frompc == king) ? move.topos : kingpos;  // king position after applying
-    return _board_hit(board, kingpos_fut / 8, kingpos_fut % 8, player);  // remove if king in check
-}
 
 alst_t board_get_moves(const board_t *board) {
     alst_t ret = alst_make(30);  // reserve 30
@@ -175,11 +155,11 @@ alst_t board_get_moves(const board_t *board) {
     assert(kingpos != NOPOS);
 
     const pc_t king = FLAGS_BPLAYER(board->flags) ? BKING : WKING;
-    int j = 0;  // end of kept portion
-    for (int i = 0; i < ret.len; ++i) {
+    size_t j = 0;  // end of kept portion
+    for (size_t i = 0; i < ret.len; ++i) {
         move_t *move = (move_t *) alst_get(&ret, i);
         board_t *board_future = board_copy(board);
-        board_apply_move(board_future, *move);
+        board_apply_move(board_future, move);
         pos_t kingpos_future = (move->frompc == king) ? move->topos : kingpos;
         if (!_board_hit(board_future, kingpos_future / 8, kingpos_future % 8, player)) {  // king is not hit; keep
             // swap ith and jth move
@@ -223,7 +203,6 @@ int _board_hit(const board_t *board, const int rk, const int offs, const int whi
 void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, const int offs) {
 
     if (FLAGS_WPLAYER(board->flags)) {  // WHITE; moves go UP in rank
-        move_t *move;
 
         // SINGLE AND DOUBLE UP MOVE (AND PROMOTION)
         if (ISPOS2(rk + 1, offs)

@@ -1,3 +1,8 @@
+extern "C" {
+#include "board.h"
+#include "move.h"
+}
+
 #include <gtest/gtest.h>
 #include <cstdlib>
 #include <map>
@@ -5,11 +10,6 @@
 #include <string>
 #include <algorithm>
 
-#include "board.h"
-#include "move.h"
-
-using game::Board;
-using game::Move;
 using std::map;
 using std::string;
 using std::vector;
@@ -39,7 +39,7 @@ static map <string, vector<bool>> endgameCases =
     {"rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq -", {true, false}},  // fastest mate
     {"5bnr/4p1pq/4Qpkr/7p/7P/4P3/PPPP1PP1/RNB1KBNR b KQ -", {false, true}}};  // fastest stalemate
 
-string printMoveVec(const vector<Move> &moves);
+string printMoveVec(const vector<move_t *> &moves);
 
 static map<string, map<uint8_t, vector<bool>>> hitCases =
    {{"2kr1b1r/pppqppp1/2n1bn1p/3P4/3P1B2/2NB1N2/PPP2PPP/R2Q1RK1 b - -",
@@ -113,21 +113,25 @@ TEST(BoardMoveGenTest, MoveList) {
    for (auto it = genCases.begin(); it != genCases.end(); ++it) {
       char moves[it->second.size()];
       strcpy(moves, it->second.c_str());
-      vector<Move> expect;
+      vector<move_t *> expect;
       char *move = strtok(moves, "\t");
       while (move) {
-         expect.push_back(move);
+         expect.push_back(move_make_algnot(move));
          move = strtok(NULL, "\t");
       }
-      Board b(it->first.c_str());
-      vector<Move> actual = b.generateMoves();
+      board_t *b = board_make(it->first.c_str());
+      alst_t actual_ = board_get_moves(b);
+      vector<move_t *> actual;
+      for (size_t i = 0; i < actual_.len; ++i) {
+         actual.push_back((move_t *) alst_get(&actual_, i));
+      }
 
-      std::sort(actual.begin(), actual.end(), [](const Move &a, const Move &b) {return a < b;});
-      std::sort(expect.begin(), expect.end(), [](const Move &a, const Move &b) {return a < b;});
+      std::sort(actual.begin(), actual.end(), [](const move_t *a, const move_t *b) {return move_cmp(a, b) < 0;});
+      std::sort(expect.begin(), expect.end(), [](const move_t *a, const move_t *b) {return move_cmp(a, b) < 0;});
       const string actualStr = printMoveVec(actual);
       const string expectStr = printMoveVec(expect);
 
-      EXPECT_EQ(actual.size(), expect.size()) << "Diff moves list size for " << b.toFen()
+      EXPECT_EQ(actual.size(), expect.size()) << "Diff moves list size for " << board_to_fen(b)
          << std::endl << "\tGot" << actualStr
          << std::endl << "\tExp" << expectStr;
 
@@ -135,22 +139,22 @@ TEST(BoardMoveGenTest, MoveList) {
          continue;
       }
 
-      EXPECT_EQ(strcmp(actualStr.c_str(), expectStr.c_str()), 0) << "Diff moves list for " << b.toFen()
+      EXPECT_EQ(strcmp(actualStr.c_str(), expectStr.c_str()), 0) << "Diff moves list for " << board_to_fen(b)
          << std::endl << "\tGot" << actualStr
          << std::endl << "\tExp" << expectStr;
 
-      Move *m1;
-      Move *m2;
+      move_t *m1;
+      move_t *m2;
       for (size_t i = 0; i < actual.size(); ++i) {
-         m1 = &actual[i];
-         m2 = &expect[i];
-         EXPECT_EQ(strcmp(m1->algNot().c_str(), m2->algNot().c_str()), 0) << "Move diff; got " << m1->algNot() << " but expected " << m2->algNot();
-         EXPECT_EQ(m1->frompos_, m2->frompos_);
-         EXPECT_EQ(m1->frompc_, m2->frompc_);
-         EXPECT_EQ(m1->topos_, m2->topos_);
-         EXPECT_EQ(m1->topc_, m2->topc_);
-         EXPECT_EQ(m1->killpos_, m2->killpos_);
-         EXPECT_EQ(m1->killpc_, m2->killpc_);
+         m1 = actual[i];
+         m2 = expect[i];
+         EXPECT_EQ(strcmp(move_str(m1), move_str(m2)), 0) << "Move diff; got " << move_str(m1) << " but expected " << move_str(m2);
+         EXPECT_EQ(m1->frompos, m2->frompos);
+         EXPECT_EQ(m1->frompc, m2->frompc);
+         EXPECT_EQ(m1->topos, m2->topos);
+         EXPECT_EQ(m1->topc, m2->topc);
+         EXPECT_EQ(m1->killpos, m2->killpos);
+         EXPECT_EQ(m1->killpc, m2->killpc);
       }
    }
 }
@@ -160,29 +164,30 @@ TEST(BoardMoveGenTest, Endgame) {
         const string &fen = it->first;
         const vector<bool> &expect = it->second;
 
-        Board b(fen.c_str());
+        board_t *b = board_make(fen.c_str());
 
-        EXPECT_EQ(b.mate(), expect[0]);
-        EXPECT_EQ(b.stalemate(), expect[1]);
+        EXPECT_EQ(board_is_mate(b), expect[0]);
+        EXPECT_EQ(board_is_stalemate(b), expect[1]);
     }
 }
 
-string printMoveVec(const vector<Move> &moves) {
+string printMoveVec(const vector<move_t *> &moves) {
    string ret;
    for (const auto &mv : moves) {
-      ret += " " + mv.algNot();
+      ret += " ";
+      ret += move_str(mv);
    }
    return ret;
 }
 
 TEST(BoardMoveGenTest, HitCheck) {
    for (auto it = hitCases.begin(); it != hitCases.end(); ++it) {
-      Board b(it->first.c_str());
+      board_t *b = board_make(it->first.c_str());
       for (const auto &posToHitCase : it->second) {
          uint8_t pos = posToHitCase.first;
          vector<bool> expect = posToHitCase.second;
-         EXPECT_EQ(b.hit(pos / 8, pos % 8, true), expect[0]) << "diff for white hits on pos " << std::to_string(pos) << " for fen " << b.toFen();
-         EXPECT_EQ(b.hit(pos / 8, pos % 8, false), expect[1]) << "diff for black hits on pos " << std::to_string(pos) << " for fen " << b.toFen();
+         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, true), expect[0]) << "diff for white hits on pos " << std::to_string(pos) << " for fen " << board_to_fen(b);
+         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, false), expect[1]) << "diff for black hits on pos " << std::to_string(pos) << " for fen " << board_to_fen(b);
       }
    }
 }

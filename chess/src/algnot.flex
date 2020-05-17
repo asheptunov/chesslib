@@ -89,7 +89,7 @@ static void clrRes() {
     KILLPC = 0;
 }
 
-move_t algnot_parse(const char *str, move_t *move) {
+int algnot_parse(const char *str, move_t *move) {
     clrRes();
     YY_BUFFER_STATE bs = yy_scan_string(str);  // parse
     yylex();

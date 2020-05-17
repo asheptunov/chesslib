@@ -1,19 +1,19 @@
+extern "C" {
+#include "move.h"
+}
+
 #include <gtest/gtest.h>
 #include <cstdlib>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <map>
 #include <string>
-
-#include "move.h"
 
 using std::cout;
 using std::endl;
 using std::vector;
 using std::map;
 using std::string;
-using game::Move;
 
 //     frompos  |    topos   |    killpos  |  frompc | topc | killpc |  isCap  |  isEP | isProm | castle    |   op<<     |    algNot
 static map<vector<int>, vector<string>> rawCases =
@@ -35,101 +35,103 @@ static map<vector<int>, vector<string>> rawCases =
 
 TEST(MoveTest, ValConstruct) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(m.frompos_, it->first[0]) << "diff at " << it->second[0];
-        EXPECT_EQ(m.topos_, it->first[1]) << "diff at " << it->second[0];
-        EXPECT_EQ(m.killpos_, it->first[2]) << "diff at " << it->second[0];
-        EXPECT_EQ(m.frompc_, it->first[3]) << "diff at " << it->second[0];
-        EXPECT_EQ(m.topc_, it->first[4]) << "diff at " << it->second[0];
-        EXPECT_EQ(m.killpc_, it->first[5]) << "diff at " << it->second[0];
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(m->frompos, it->first[0]) << "diff at " << it->second[0];
+        EXPECT_EQ(m->topos, it->first[1]) << "diff at " << it->second[0];
+        EXPECT_EQ(m->killpos, it->first[2]) << "diff at " << it->second[0];
+        EXPECT_EQ(m->frompc, it->first[3]) << "diff at " << it->second[0];
+        EXPECT_EQ(m->topc, it->first[4]) << "diff at " << it->second[0];
+        EXPECT_EQ(m->killpc, it->first[5]) << "diff at " << it->second[0];
+        free(m);
     }
 }
 
 TEST(MoveTest, AlgNotConstruct) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m1(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        Move m2(it->second[1].c_str());
-        EXPECT_EQ(m1.frompos_, m2.frompos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.topos_, m2.topos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.killpos_, m2.killpos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.frompc_, m2.frompc_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.topc_, m2.topc_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.killpc_, m2.killpc_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.isCapture(), m2.isCapture()) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.isEnPassant(), m2.isEnPassant()) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.isPromotion(), m2.isPromotion()) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.castleType(), m2.castleType()) << "diff at " << it->second[0];
-        std::ostringstream os1;
-        std::ostringstream os2;
-        os1 << m1;
-        os2 << m2;
-        EXPECT_EQ(os1.str(), os2.str()) << "diff at " << it->second[0];
-    }
-}
-
-TEST(MoveTest, Assign) {
-    for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m1(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        Move m2(NOPOS, NOPOS, NOPOS, NOPC, NOPC, NOPC);
-        m2 = m1;
-        EXPECT_EQ(m1.frompos_, m2.frompos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.topos_, m2.topos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.killpos_, m2.killpos_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.frompc_, m2.frompc_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.topc_, m2.topc_) << "diff at " << it->second[0];
-        EXPECT_EQ(m1.killpc_, m2.killpc_) << "diff at " << it->second[0];
+        move_t *m1 = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        move_t *m2 = move_make_algnot(it->second[1].c_str());
+        EXPECT_EQ(m1->frompos, m2->frompos) << "diff at " << it->second[0];
+        EXPECT_EQ(m1->topos, m2->topos) << "diff at " << it->second[0];
+        EXPECT_EQ(m1->killpos, m2->killpos) << "diff at " << it->second[0];
+        EXPECT_EQ(m1->frompc, m2->frompc) << "diff at " << it->second[0];
+        EXPECT_EQ(m1->topc, m2->topc) << "diff at " << it->second[0];
+        EXPECT_EQ(m1->killpc, m2->killpc) << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_cap(m1), move_is_cap(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_ep(m1), move_is_ep(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_promo(m1), move_is_promo(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_castle(m1), move_is_castle(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(move_str(m1), move_str(m2)) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, IsCapture) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(m.isCapture(), it->first[6]) << "diff at " << it->second[0];
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_cap(m), it->first[6]) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, IsEnPassant) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(m.isEnPassant(), it->first[7]) << "diff at " << it->second[0];
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_ep(m), it->first[7]) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, IsPromotion) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(m.isPromotion(), it->first[8]) << "diff at " << it->second[0];
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_promo(m), it->first[8]) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, CastleType) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(m.castleType(), it->first[9]) << "diff at " << it->second[0];
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_castle(m), it->first[9]) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, Print) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
-        Move m(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         std::ostringstream os;
-        os << m;
-        EXPECT_EQ(os.str(), it->second[0]) << "diff at " << it->second[0];
+        EXPECT_EQ(move_str(m), it->second[0]) << "diff at " << it->second[0];
     }
 }
 
 TEST(MoveTest, LessThan) {
-    ASSERT_TRUE(Move("Ke1e2") < Move("ke1e2"));
-    ASSERT_FALSE(Move("ke1e2") < Move("Ke1e2"));
+    move_t *m1 = move_make_algnot("Ke1e2");
+    move_t *m2 = move_make_algnot("ke1e2");
+    ASSERT_TRUE(move_cmp(m1, m2) < 0);
+    ASSERT_FALSE(move_cmp(m2, m1) < 0);
+    free(m1);
+    free(m2);
 
-    ASSERT_TRUE(Move("Qe1e2") < Move("Ke1e2"));
-    ASSERT_FALSE(Move("Ke1e2") < Move("Qe1e2"));
+    m1 = move_make_algnot("Qe1e2");
+    m2 = move_make_algnot("Ke1e2");
+    ASSERT_TRUE(move_cmp(m1, m2) < 0);
+    ASSERT_FALSE(move_cmp(m2, m1) < 0);
+    free(m1);
+    free(m2);
 
-    ASSERT_TRUE(Move("Pe2e3") < Move("Pe2e4"));
-    ASSERT_FALSE(Move("Pe2e4") < Move("Pe2e3"));
+    m1 = move_make_algnot("Pe2e3");
+    m2 = move_make_algnot("Pe2e4");
+    ASSERT_TRUE(move_cmp(m1, m2) < 0);
+    ASSERT_FALSE(move_cmp(m2, m1) < 0);
+    free(m1);
+    free(m2);
 
-    ASSERT_TRUE(Move("rb2b5") < Move("rb3b5"));
-    ASSERT_FALSE(Move("rb3b5") < Move("rb2b5"));
+    m1 = move_make_algnot("rb2b5");
+    m2 = move_make_algnot("rb3b5");
+    ASSERT_TRUE(move_cmp(m1, m2) < 0);
+    ASSERT_FALSE(move_cmp(m2, m1) < 0);
+    free(m1);
+    free(m2);
 
-    ASSERT_FALSE(Move("Na1b3") < Move("Na1b3"));
+    m1 = move_make_algnot("Na1b3");
+    m2 = move_make_algnot("Na1b3");
+    ASSERT_FALSE(move_cmp(m1, m2));
+    free(m1);
+    free(m2);
 }
