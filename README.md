@@ -1,6 +1,6 @@
 # Chess Engine
 
-This is a bitboard-based chess engine written in C++. The API is intended to be used for testing chess bots.
+This is a bitboard-based chess state machine written (mostly) in C. The API is intended to be used for testing chess bots.
 
 ## Setup and Building from Source
 
