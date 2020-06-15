@@ -1,4 +1,6 @@
 %option noyywrap
+%option nounput
+%option noinput
 %{
 #include "defs.h"
 #include "algnot.h"

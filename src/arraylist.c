@@ -3,22 +3,23 @@
 
 #include "arraylist.h"
 
-alst_t alst_make(size_t cap) {
-  alst_t ret;
-  if (cap <= 0) {
-    cap = 10;
+alst_t *alst_make(size_t cap) {
+  alst_t *ret = (alst_t *) malloc(sizeof(alst_t));
+  if (!ret) {
+    fprintf(stderr, "alst_make malloc failure 1\n");
+    exit(1);
   }
-  ret.len = 0;
-  ret.cap = cap;
-  ret.data = malloc(cap * sizeof(void *));
-  if (!ret.data) {
-    fprintf(stderr, "alst_make malloc failure\n");
+  ret->len = 0;
+  ret->cap = cap;
+  ret->data = malloc(cap * sizeof(void *));
+  if (!(ret->data)) {
+    fprintf(stderr, "alst_make malloc failure 2\n");
     exit(1);
   }
   return ret;
 }
 
-void aslt_free(alst_t *list) {
+void alst_free(alst_t *list) {
   free(list->data);
 }
 

@@ -11,10 +11,10 @@ typedef struct {
 } alst_t;
 
 // returns an arraylist of the designated capacity cap, with data zeroed if zero specified
-alst_t alst_make(size_t cap);
+alst_t *alst_make(size_t cap);
 
 // frees all data associated with the arraylist list
-void aslt_free(alst_t *list);
+void alst_free(alst_t *list);
 
 // puts the value val at the index i in the arraylist list
 void alst_put(alst_t *list, size_t i, void *val);

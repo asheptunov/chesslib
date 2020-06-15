@@ -155,7 +155,7 @@ int board_is_mate(const board_t *board) {
         return 0;
     }
 
-    return board_get_moves(board).len == 0;  // in check and no moves -> mate
+    return board_get_moves(board)->len == 0;  // in check and no moves -> mate
 }
 
 int board_is_stalemate(const board_t *board) {
@@ -167,7 +167,7 @@ int board_is_stalemate(const board_t *board) {
         return 0;
     }
 
-    return board_get_moves(board).len == 0;  // not in check and no moves -> stalemate
+    return board_get_moves(board)->len == 0;  // not in check and no moves -> stalemate
 }
 
 // caller responsible for freeing returned buffer

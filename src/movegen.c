@@ -96,8 +96,8 @@ _move_delta_t king_moves[8] = {{UP, 0}, {DN, 0}, {0, RT}, {0, LT}, {UP, RT}, {UP
 #define CUR_ROOK_MOVE rook_moves[i * 7 + j]
 #define CUR_QUEEN_MOVE queen_moves[i * 7 + j]
 
-alst_t board_get_moves(const board_t *board) {
-    alst_t ret = alst_make(30);  // reserve 30
+alst_t *board_get_moves(const board_t *board) {
+    alst_t *ret = alst_make(30);  // reserve 30
 
     pos_t kingpos = NOPOS;  // this should be set by the end, or we are in an invalid state
     const int player = FLAGS_BPLAYER(board->flags);  // 1 if current player is black, 0 if white
@@ -122,28 +122,28 @@ alst_t board_get_moves(const board_t *board) {
                 break;
             case WPAWN:
             case BPAWN:
-                _board_generatePawnMoves(board, &ret, rk, offs);
+                _board_generatePawnMoves(board, ret, rk, offs);
                 break;
             case WKNIGHT:
             case BKNIGHT:
-                _board_generateKnightMoves(board, &ret, rk, offs);
+                _board_generateKnightMoves(board, ret, rk, offs);
                 break;
             case WBISHOP:
             case BBISHOP:
-                _board_generateBishopMoves(board, &ret, rk, offs);
+                _board_generateBishopMoves(board, ret, rk, offs);
                 break;
             case WROOK:
             case BROOK:
-                _board_generateRookMoves(board, &ret, rk, offs);
+                _board_generateRookMoves(board, ret, rk, offs);
                 break;
             case WQUEEN:
             case BQUEEN:
-                _board_generateQueenMoves(board, &ret, rk, offs);
+                _board_generateQueenMoves(board, ret, rk, offs);
                 break;
             case WKING:
             case BKING:
                 kingpos = POS2(offs, rk);
-                _board_generateKingMoves(board, &ret, rk, offs);
+                _board_generateKingMoves(board, ret, rk, offs);
                 break;
             default:
                 break;
@@ -156,16 +156,16 @@ alst_t board_get_moves(const board_t *board) {
 
     const pc_t king = FLAGS_BPLAYER(board->flags) ? BKING : WKING;
     size_t j = 0;  // end of kept portion
-    for (size_t i = 0; i < ret.len; ++i) {
-        move_t *move = (move_t *) alst_get(&ret, i);
+    for (size_t i = 0; i < ret->len; ++i) {
+        move_t *move = (move_t *) alst_get(ret, i);
         board_t *board_future = board_copy(board);
         board_apply_move(board_future, move);
         pos_t kingpos_future = (move->frompc == king) ? move->topos : kingpos;
         if (!_board_hit(board_future, kingpos_future / 8, kingpos_future % 8, player)) {  // king is not hit; keep
             // swap ith and jth move
-            move_t *tmp = (move_t *) alst_get(&ret, j);  // tmp = ar[j]
-            alst_put(&ret, j, (void *) move);            // ar[j] = ar[i]
-            alst_put(&ret, i, (void *) tmp);             // ar[i] = tmp
+            move_t *tmp = (move_t *) alst_get(ret, j);  // tmp = ar[j]
+            alst_put(ret, j, (void *) move);            // ar[j] = ar[i]
+            alst_put(ret, i, (void *) tmp);             // ar[i] = tmp
             if (i != j) {  // if didn't swap with self, consider ith position again on next 
                 --i;
             }
@@ -173,7 +173,7 @@ alst_t board_get_moves(const board_t *board) {
         }
         free(board_future);
     }
-    ret.len = j;
+    ret->len = j;
 
     return ret;
 }

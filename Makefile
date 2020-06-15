@@ -1,7 +1,7 @@
 # -----------------
 # >>>> MODULES <<<<
 # -----------------
-CHESS_ROOT = ./chess
+CHESS_ROOT = .
 CHESS_BIN = $(CHESS_ROOT)/bin
 CHESS_HDR = $(CHESS_ROOT)/include
 CHESS_SRC = $(CHESS_ROOT)/src
@@ -24,11 +24,11 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
 # >>>> COMPILER PROPERTIES <<<<
 # -----------------------------
 C = gcc
-CFLAGS = -g -Wall -Wextra -std=c99 -D_XOPEN_SOURCE=700
+CFLAGS = -g -Wall -Wextra -std=c99 -D_XOPEN_SOURCE=700 -fPIC -O3
 
 CXX = g++
 CPPFLAGS = -isystem $(GTEST_HDR)
-CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11
 
 # --------------------------
 # >>>> LEXER PROPERTIES <<<<
@@ -36,11 +36,11 @@ CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O3
 LEX = flex
 LEXFLAGS = --align --fast --verbose  # --debug
 
-# -----------------------------
-# >>>> ARCHIVER PROPERTIES <<<<
-# -----------------------------
-AR = ar
-ARFLAGS = -rv
+# # -----------------------------
+# # >>>> ARCHIVER PROPERTIES <<<<
+# # -----------------------------
+# AR = ar
+# ARFLAGS = -rv
 
 # -------------------------
 # >>>> TARGET BINARIES <<<<
@@ -50,7 +50,7 @@ TESTS = $(CHESS_BIN)/moveTest        \
         $(CHESS_BIN)/arraylistTest   \
 				$(CHESS_BIN)/movegenTest
 
-LIBS = $(CHESS_BIN)/libchess.a
+LIBS = $(CHESS_BIN)/libchess.so
 
 test: $(TESTS)
 	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest $(CHESS_BIN)/arraylistTest
@@ -62,7 +62,7 @@ all: $(TESTS) $(LIBS)
 .PHONY: clean
 
 clean:
-	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/src/*.c $(CHESS_OBJ)/test/*.o
+	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/src/*.c $(CHESS_OBJ)/test/*.o $(CHESS_OBJ)/src/*.a $(CHESS_OBJ)/src/*.so ; \
 
 # -------------------
 # >>>> C RECIPES <<<<
@@ -118,5 +118,8 @@ $(CHESS_BIN)/arraylistTest: $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/test/array
 $(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-$(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
-	$(AR) $(ARFLAGS) $@ $^
+# $(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+# 	$(AR) $(ARFLAGS) $@ $^
+
+$(CHESS_BIN)/libchess.so: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+	$(C) $(CFLAGS) $^ -shared -o $@

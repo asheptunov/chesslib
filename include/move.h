@@ -18,7 +18,7 @@ move_t *move_make_algnot(const char *algnot);
 
 void move_free(move_t *move);
 
-int move_equal(const move_t *a, const move_t *b);
+// int move_equal(const move_t *a, const move_t *b);
 
 int move_cmp(const move_t *a, const move_t *b);
 

@@ -122,10 +122,10 @@ TEST(BoardMoveGenTest, MoveList) {
          move = strtok(NULL, "\t");
       }
       board_t *b = board_make(it->first.c_str());
-      alst_t actual_ = board_get_moves(b);
+      alst_t *actual_ = board_get_moves(b);
       vector<move_t *> actual;
-      for (size_t i = 0; i < actual_.len; ++i) {
-         actual.push_back((move_t *) alst_get(&actual_, i));
+      for (size_t i = 0; i < actual_->len; ++i) {
+         actual.push_back((move_t *) alst_get(actual_, i));
       }
 
       std::sort(actual.begin(), actual.end(), [](const move_t *a, const move_t *b) {return move_cmp(a, b) < 0;});

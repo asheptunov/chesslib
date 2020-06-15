@@ -11,8 +11,7 @@ typedef struct {
 } board_t;
 
 /**
-     * Constructs a board from the given string, in Forsyth-Edwards notation. If no
-     * string is specified, the starting position for chess is used.
+     * Constructs a board from the given string, in Forsyth-Edwards notation.
      */
 board_t *board_make(const char *fen);
 
@@ -45,7 +44,7 @@ void board_apply_move(board_t *board, const move_t *move);
      * 
      * @return the vector of possible moves
      */
-alst_t board_get_moves(const board_t *board);
+alst_t *board_get_moves(const board_t *board);
 
 /**
      * Returns true if the game has ended in a mate, or specifically when the active player's king is in check and
