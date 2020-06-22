@@ -81,9 +81,24 @@ void board_apply_move(board_t *board, const move_t *move) {
     // kill the target piece if the move is a capture
     if (move_is_cap(move)) {
         int k_rk = move->killpos / 8;
-        int k_offs = move->killpc % 8;
+        int k_offs = move->killpos % 8;
         ZEROPOS(k_offs, board->ranks[k_rk]);
         SETPOS(k_offs, board->ranks[k_rk], NOPC);
+
+        // update castling rights / bits if killed piece was an opponent's rook that could've castled
+        if (move->killpc == WROOK) {
+            if (move->killpos == POS('a', 1)) {
+                ZEROCASTLE2(board->flags, WQCASTLE);
+            } else if (move->killpos == POS('h', 1)) {
+                ZEROCASTLE2(board->flags, WKCASTLE);
+            }
+        } else if (move->killpc == BROOK) {
+            if (move->killpos == POS('a', 8)) {
+                ZEROCASTLE2(board->flags, BQCASTLE);
+            } else if (move->killpos == POS('h', 8)) {
+                ZEROCASTLE2(board->flags, BKCASTLE);
+            }
+        }
     }
 
     // move the piece
@@ -108,16 +123,26 @@ void board_apply_move(board_t *board, const move_t *move) {
 
     // update castling rights / bits if castled or made a move that voids castling
     switch (move->frompc) {
-        case WROOK:
-            ZEROCASTLE2(board->flags, move->frompos == POS('a', 1) ? WQCASTLE : WKCASTLE);
+        case WROOK: {
+            if (move->frompos == POS('a', 1)) {
+                ZEROCASTLE2(board->flags, WQCASTLE);
+            } else if (move->frompos == POS('h', 1)) {
+                ZEROCASTLE2(board->flags, WKCASTLE);
+            }
             break;
+        }
         case WKING:
             ZEROCASTLE2(board->flags, WKCASTLE);
             ZEROCASTLE2(board->flags, WQCASTLE);
             break;
-        case BROOK:
-            ZEROCASTLE2(board->flags, move->frompos == POS('a', 8) ? BQCASTLE : BKCASTLE);
+        case BROOK: {
+            if (move->frompos == POS('a', 8)) {
+                ZEROCASTLE2(board->flags, BQCASTLE);
+            } else if (move->frompos == POS('h', 8)) {
+                ZEROCASTLE2(board->flags, BKCASTLE);
+            }
             break;
+        }
         case BKING:
             ZEROCASTLE2(board->flags, BKCASTLE);
             ZEROCASTLE2(board->flags, BQCASTLE);

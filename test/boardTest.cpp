@@ -77,7 +77,8 @@ static map<vector<string>, move_t *> applyBasicCaptureCases =
     {{"8/b7/8/8/8/8/5P2/8 b Kkq -", "8/8/8/8/8/8/5b2/8 w Kkq -"}, move_make(POS('a', 7), POS('f', 2), POS('f', 2), BBISHOP, BBISHOP, WPAWN)},
     {{"r1Q5/8/8/8/8/8/8/8 b Kq -", "2r5/8/8/8/8/8/8/8 w K -"}, move_make(POS('a', 8), POS('c', 8), POS('c', 8), BROOK, BROOK, WQUEEN)},
     {{"8/8/8/8/8/8/5q2/5R2 b - b3", "8/8/8/8/8/8/8/5q2 w - -"}, move_make(POS('f', 2), POS('f', 1), POS('f', 1), BQUEEN, BQUEEN, WROOK)},
-    {{"4k3/3N4/8/8/8/8/8/8 b Qkq -", "8/3k4/8/8/8/8/8/8 w Q -"}, move_make(POS('e', 8), POS('d', 7), POS('d', 7), BKING, BKING, WKNIGHT)}};
+    {{"4k3/3N4/8/8/8/8/8/8 b Qkq -", "8/3k4/8/8/8/8/8/8 w Q -"}, move_make(POS('e', 8), POS('d', 7), POS('d', 7), BKING, BKING, WKNIGHT)},
+    {{"rnbq1k1r/pp1Pbppp/2p5/8/1PB5/8/P1P1NnPP/RNBQK2R b KQ -", "rnbq1k1r/pp1Pbppp/2p5/8/1PB5/8/P1P1N1PP/RNBQK2n w Q -"}, move_make(POS('f', 2), POS('h', 1), POS('h', 1), BKNIGHT, BKNIGHT, WROOK)}};  // if an uncastled rook is captured, can't castle on that side anymore
 
 static map<vector<string>, move_t *> applyCastlingCases =
   {{{"8/8/8/8/8/8/8/4K2R w K -", "8/8/8/8/8/8/8/5RK1 b - -"}, move_make(POS('e', 1), POS('g', 1), NOPOS, WKING, WKING, NOPC)},

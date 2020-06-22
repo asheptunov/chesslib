@@ -13,7 +13,7 @@ TEST(ArrayListTest, Make) {
   EXPECT_TRUE(list->data);
   alst_free(list);
   list = alst_make(0);
-  EXPECT_EQ(list->cap, 10);
+  EXPECT_EQ(list->cap, 10);  // cap should be max(10, cap)
   EXPECT_EQ(list->len, 0);
   EXPECT_TRUE(list->data);
   alst_free(list);

@@ -10,7 +10,7 @@ alst_t *alst_make(size_t cap) {
     exit(1);
   }
   ret->len = 0;
-  ret->cap = cap;
+  ret->cap = (cap < 10) ? 10 : cap;
   ret->data = malloc(cap * sizeof(void *));
   if (!(ret->data)) {
     fprintf(stderr, "alst_make malloc failure 2\n");

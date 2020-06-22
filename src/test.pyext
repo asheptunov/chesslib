@@ -1,0 +1,28 @@
+from ctypes import *
+
+import chess
+import minimax
+
+if __name__ == '__main__':
+    board = chess.board_make('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ -')
+    paths = minimax.minimax(minimax.eval, board, 3)
+    utility, move, paths = minimax.minimax(eval, board, 3)
+    print('paths', '\n'.join(sorted(paths)))
+    print('nodes explored', minimax.ctr)
+
+    # board = chess.board_make('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -')
+    # print('before', chess.board_to_fen(board))
+    # print(chess.board_to_tui(board))
+    # moves_alst = chess.board_get_moves(board)
+    # moves = chess.alst_to_vector(moves_alst, POINTER(chess.MOVE))
+    # chess.alst_free(moves_alst)
+    # print('moves', [chess.move_str(m) for m in moves])
+
+    # chess.board_apply_move(board, chess.move_make_algnot('Pd5xpe6'))
+
+    # print('after', chess.board_to_fen(board))
+    # print(chess.board_to_tui(board))
+    # moves_alst = chess.board_get_moves(board)
+    # moves = chess.alst_to_vector(moves_alst, POINTER(chess.MOVE))
+    # chess.alst_free(moves_alst)
+    # print('moves', [chess.move_str(m) for m in moves])

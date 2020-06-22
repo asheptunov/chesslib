@@ -10,7 +10,7 @@ typedef struct {
   void **data;  // the array
 } alst_t;
 
-// returns an arraylist of the designated capacity cap, with data zeroed if zero specified
+// returns an arraylist of the designated capacity cap (true capacity will be max(10, cap))
 alst_t *alst_make(size_t cap);
 
 // frees all data associated with the arraylist list
