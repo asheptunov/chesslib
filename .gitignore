@@ -1,4 +1,10 @@
-.vscode/
-chess/bin/
-chess/out/
-chess/lib/
+__pycache__/
+
+lib/
+build/
+bin/
+
+.vscode
+.settings
+.project
+.cproject

@@ -32,7 +32,8 @@ static map <string, string> genCases =
     {"r1bqk2r/ppp2ppp/2n2n2/2bpP3/2Bp4/2P2N2/PP3PPP/RNBQK2R w KQkq d6",      "Qd1c2	Qd1b3	Qd1a4	Qd1e2	Qd1d2	Qd1d3	Qd1xpd4	Rh1g1	Rh1f1	Bc1d2	Bc1e3	Bc1f4	Bc1g5	Bc1h6	Bc4b5	Bc4a6	Bc4xpd5	Bc4d3	Bc4e2	Bc4f1	Bc4b3	Nb1a3	Nb1d2	Nf3xpd4	Nf3g5	Nf3h4	Nf3d2	Nf3g1	Pa2a3	Pa2a4	Pb2b3	Pb2b4	Pg2g3	Pg2g4	Ph2h3	Ph2h4	Pc3xpd4	Pe5e6	Pe5xnf6	Pe5xpd6e.p.	Ke1g1	Ke1f1	Ke1d2	Ke1e2"},
     {"8/8/P7/8/4Pp2/8/k4b2/3K4 b - e3",                                      "bf2e1	bf2g1	bf2g3	bf2h4	bf2e3	bf2d4	bf2c5	bf2b6	bf2a7	pf4f3	pf4xPe3e.p.	ka2b2	ka2a1	ka2b1	ka2a3	ka2b3"},
     {"4k3/8/8/8/8/4r3/8/R3K2R w KQ -",                                       "Ke1f1	Ke1d1	Ke1d2	Ke1f2"},
-    {"1k6/8/8/8/8/8/2p5/1R2K3 b - -",                                        "kb8c8	kb8a8	kb8a7	kb8c7	pc2xRb1q	pc2xRb1n	pc2xRb1r	pc2xRb1b"}};
+    {"1k6/8/8/8/8/8/2p5/1R2K3 b - -",                                        "kb8c8	kb8a8	kb8a7	kb8c7	pc2xRb1q	pc2xRb1n	pc2xRb1r	pc2xRb1b"},
+    {"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -",     "Ne5xpf7	Ne5xpg6	Ne5g4	Ne5d3	Ne5c4	Ne5c6	Ne5xpd7	Nc3d1	Nc3b1	Nc3a4	Nc3b5	Bd2e3	Bd2f4	Bd2g5	Bd2h6	Bd2c1	Be2f1	Be2d1	Be2d3	Be2c4	Be2b5	Be2xba6	Qf3g4	Qf3h5	Ra1b1	Ra1c1	Ra1d1	Rh1g1	Rh1f1	Qf3f4	Qf3f5	Qf3xnf6	Qf3g3	Qf3xph3	Qf3e3	Qf3d3	Ke1g1	Ke1c1	Ke1f1	Ke1d1	Pd5d6	Pd5xpe6	Pa2a3	Pa2a4	Pb2b3	Pg2g3	Pg2g4	Pg2xph3"}};
 
 // fen -> ( mate? , stalemate? )
 static map <string, vector<bool>> endgameCases =

@@ -6,7 +6,7 @@ CHESS_BIN = $(CHESS_ROOT)/bin
 CHESS_HDR = $(CHESS_ROOT)/include
 CHESS_SRC = $(CHESS_ROOT)/src
 CHESS_LIB = $(CHESS_ROOT)/lib
-CHESS_OBJ = $(CHESS_ROOT)/out
+CHESS_OBJ = $(CHESS_ROOT)/build
 CHESS_TST = $(CHESS_ROOT)/test
 
 # ----------------------
@@ -20,9 +20,9 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
              $(GTEST_LIB)/libgmock.a      \
              $(GTEST_LIB)/libgmock_main.a
 
-# -----------------------------
-# >>>> COMPILER PROPERTIES <<<<
-# -----------------------------
+# ------------------------
+# >>>> GCC PROPERTIES <<<<
+# ------------------------
 C = gcc
 CFLAGS = -g -Wall -Wextra -std=c99 -D_XOPEN_SOURCE=700 -fPIC -O3
 
@@ -36,39 +36,64 @@ CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11
 LEX = flex
 LEXFLAGS = --align --fast --verbose  # --debug
 
-# # -----------------------------
-# # >>>> ARCHIVER PROPERTIES <<<<
-# # -----------------------------
-# AR = ar
-# ARFLAGS = -rv
+# ---------------------------
+# >>>> PYTHON PROPERTIES <<<<
+# ---------------------------
+PY = python3
+PYFLAGS = -m
 
 # -------------------------
 # >>>> TARGET BINARIES <<<<
 # -------------------------
-TESTS = $(CHESS_BIN)/moveTest        \
-        $(CHESS_BIN)/boardTest       \
-        $(CHESS_BIN)/arraylistTest   \
-				$(CHESS_BIN)/movegenTest
+UNIT_TESTS = $(CHESS_BIN)/moveTest        \
+        	 $(CHESS_BIN)/boardTest       \
+        	 $(CHESS_BIN)/arraylistTest   \
+			 $(CHESS_BIN)/movegenTest
+
+SYSTEM_TESTS = $(CHESS_TST)/movegenTest.py
 
 LIBS = $(CHESS_BIN)/libchess.so
 
-test: $(TESTS)
-	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest $(CHESS_BIN)/arraylistTest
+init:
+	echo "making directories" ; \
+	make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; \
+	echo "fetching dependencies" ; \
+	git clone https://github.com/google/googletest.git ; \
+	cd googletest && cmake CMakeLists.txt && make && cd .. ; \
+	cp googletest/lib/* $(GTEST_LIB)/ ; \
+	cp -R googletest/googletest/include/* $(GTEST_HDR)/ ; \
+	echo "cleaning up"; \
+	rm -rf googletest ; \
+	echo "building" ; \
+	make all ; \
+	echo "done" ;
+
+unittest: $(UNIT_TESTS)
+	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest ; $(CHESS_BIN)/arraylistTest
+
+systemtest: $(SYSTEM_TESTS)
+	$(PY) $(PYFLAGS) test.movegenTest -v
 
 lib: $(LIBS)
 
-all: $(TESTS) $(LIBS)
+all: $(UNIT_TESTS) $(SYSTEM_TESTS) $(LIBS)
 
 .PHONY: clean
 
 clean:
-	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/src/*.c $(CHESS_OBJ)/test/*.o $(CHESS_OBJ)/src/*.a $(CHESS_OBJ)/src/*.so ; \
+	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/src/*.c $(CHESS_OBJ)/test/*.o $(CHESS_OBJ)/src/*.a $(CHESS_OBJ)/src/*.so
 
 # -------------------
 # >>>> C RECIPES <<<<
 # -------------------
 $(CHESS_OBJ)/src/algnot.c: $(CHESS_SRC)/algnot.flex
 	$(LEX) $(LEXFLAGS) -o $@ $<
+
+# ------------------------
+# >>>> PYTHON RECIPES <<<<
+# ------------------------
+
+$(CHESS_TST)/movegenTest.py: $(LIBS)
 
 # ------------------------
 # >>>> OBJECT RECIPES <<<<

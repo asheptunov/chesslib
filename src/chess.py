@@ -36,7 +36,7 @@ move_make_algnot_lib = lib.move_make_algnot
 move_make_algnot_lib.argtypes = [c_char_p]
 move_make_algnot_lib.restype = POINTER(MOVE)
 def move_make_algnot(algnot):
-  return move_make_algnot(algnot.encode('ascii'))
+  return move_make_algnot_lib(algnot.encode('ascii'))
 
 # void move_free(move_t *move);
 move_free = lib.move_free
@@ -101,7 +101,7 @@ board_apply_move.argtypes = [POINTER(BOARD), POINTER(MOVE)]
 # alst_t board_get_moves(const board_t *board);
 board_get_moves = lib.board_get_moves
 board_get_moves.argtypes = [POINTER(BOARD)]
-board_get_moves.restype = ALST
+board_get_moves.restype = POINTER(ALST)
 
 # int board_is_mate(const board_t *board);
 board_is_mate = lib.board_is_mate
@@ -126,6 +126,11 @@ board_to_tui_lib.argtypes = [POINTER(BOARD)]
 board_to_tui_lib.restype = c_char_p
 def board_to_tui(board):
   return board_to_tui_lib(board).decode('ascii')
+
+# int _board_hit(const board_t *board, const int rk, const int offs, const int white);
+_board_hit = lib._board_hit
+_board_hit.argtypes = [POINTER(BOARD), c_int, c_int, c_int]
+_board_hit.restype = c_int
 
 '''
 ALST_T
@@ -153,12 +158,10 @@ alst_get.restype = c_void_p
 alst_append = lib.alst_append
 alst_append.argtypes = [POINTER(ALST), c_void_p]
 
-# int _board_hit(const board_t *board, const int rk, const int offs, const int white);
-_board_hit = lib._board_hit
-_board_hit.argtypes = [POINTER(BOARD), c_int, c_int, c_int]
-_board_hit.restype = c_int
+def alst_to_vector(alst, vector_type):
+  return [cast(alst_get(alst, i), vector_type) for i in range(alst.contents.len)]
 
 if __name__ == '__main__':
-  b = board_make('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -')
+  # b = board_make('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -')
   b = board_make('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3')
   print(board_to_tui(b))
