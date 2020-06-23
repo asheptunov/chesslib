@@ -14,24 +14,34 @@ CMake 3.15.3+
 
 GNU Make 3.81+
 
-GCC with support for C++11
+GCC with support for C99 and C++11
 
 flex 2.5.35+
 
 ### Build Instructions
 
-To set up and build the engine, run
+First, run
 
 ```shell
-sh setup.sh
+make init
 ```
 
-This will set up all build directories, install libraries and build binaries.
-
-After running set up and making any changes, you can rebuild from source by running
+Unit test binaries can be run using
 
 ```shell
-make all
+make unittest
+```
+
+System (end-to-end) tests can be run using
+
+```shell
+make systemtest
+```
+
+To build from source, use
+
+```shell
+make clean all
 ```
 
 ## Authors

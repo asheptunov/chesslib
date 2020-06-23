@@ -1,7 +1,7 @@
 # -----------------
 # >>>> MODULES <<<<
 # -----------------
-CHESS_ROOT = .
+CHESS_ROOT = $(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
 CHESS_BIN = $(CHESS_ROOT)/bin
 CHESS_HDR = $(CHESS_ROOT)/include
 CHESS_SRC = $(CHESS_ROOT)/src
@@ -55,18 +55,21 @@ SYSTEM_TESTS = $(CHESS_TST)/movegenTest.py
 LIBS = $(CHESS_BIN)/libchess.so
 
 init:
-	echo "making directories" ; \
-	make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; \
-	echo "fetching dependencies" ; \
-	git clone https://github.com/google/googletest.git ; \
-	cd googletest && cmake CMakeLists.txt && make && cd .. ; \
-	cp googletest/lib/* $(GTEST_LIB)/ ; \
-	cp -R googletest/googletest/include/* $(GTEST_HDR)/ ; \
-	echo "cleaning up"; \
-	rm -rf googletest ; \
-	echo "building" ; \
-	make all ; \
-	echo "done" ;
+	@echo "making directories"
+	@test -r $(CHESS_BIN) && rm -rf $(CHESS_BIN)
+	@test -r $(CHESS_LIB) && rm -rf $(CHESS_LIB)
+	@test -r $(CHESS_OBJ) && rm -rf $(CHESS_OBJ)
+	@test -r googletest && rm -rf googletest
+	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test
+	@echo "fetching dependencies"
+	@ROOTDIR=$(pwd)
+	@git clone https://github.com/google/googletest.git
+	@cd googletest && cmake CMakeLists.txt && make && cp lib/* $(GTEST_LIB)/ && cp -R googletest/include/* $(GTEST_HDR)/
+	@cd $(ROOTDIR)
+	@rm -rf googletest
+	@echo "building"
+	@make all
+	@echo "done"
 
 unittest: $(UNIT_TESTS)
 	$(CHESS_BIN)/moveTest ; $(CHESS_BIN)/boardTest ; $(CHESS_BIN)/movegenTest ; $(CHESS_BIN)/arraylistTest
