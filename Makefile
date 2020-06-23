@@ -56,10 +56,10 @@ LIBS = $(CHESS_BIN)/libchess.so
 
 init:
 	@echo "making directories"
-	@test -r $(CHESS_BIN) && rm -rf $(CHESS_BIN)
-	@test -r $(CHESS_LIB) && rm -rf $(CHESS_LIB)
-	@test -r $(CHESS_OBJ) && rm -rf $(CHESS_OBJ)
-	@test -r googletest && rm -rf googletest
+	@if [ -d "$(CHESS_BIN)" ]; then rm -Rf $(CHESS_BIN); fi
+	@if [ -d "$(CHESS_LIB)" ]; then rm -Rf $(CHESS_LIB); fi
+	@if [ -d "$(CHESS_OBJ)" ]; then rm -Rf $(CHESS_OBJ); fi
+	@if [ -d "googletest" ]; then rm -Rf googletest; fi
 	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test
 	@echo "fetching dependencies"
 	@ROOTDIR=$(pwd)
