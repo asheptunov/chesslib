@@ -3,8 +3,11 @@ __pycache__/
 lib/
 build/
 bin/
+log/
 
 .vscode
 .settings
 .project
 .cproject
+
+*.pyc

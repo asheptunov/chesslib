@@ -166,12 +166,11 @@ alst_t *board_get_moves(const board_t *board) {
             move_t *tmp = (move_t *) alst_get(ret, j);  // tmp = ar[j]
             alst_put(ret, j, (void *) move);            // ar[j] = ar[i]
             alst_put(ret, i, (void *) tmp);             // ar[i] = tmp
-            if (i != j) {  // if didn't swap with self, consider ith position again on next 
-                --i;
-            }
             ++j;
+        } else {  // king is hit; forget this move (free)
+            move_free(move);
         }
-        free(board_future);
+        board_free(board_future);
     }
     ret->len = j;
 

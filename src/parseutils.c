@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "defs.h"
 #include "arraylist.h"
@@ -15,12 +16,19 @@ pos_t pos_from_str(const char *label) {
 
 // caller responsible for freeing returned buffer
 char *pos_to_str(const pos_t pos) {
+    char *ret;
     if (pos == NOPOS) {
-        return "-";
+        ret = (char *) malloc(2 * sizeof(char));
+        if (!ret) {
+            fprintf(stderr, "malloc error in pos_to_str (NOPOS)\n");
+            exit(1);
+        }
+        memcpy(ret, "-", 2);
+        return ret;
     }
-    char *ret = (char *) malloc(3 * sizeof(char));
+    ret = (char *) malloc(3 * sizeof(char));
     if (!ret) {
-        fprintf(stderr, "pos_to_str malloc error\n");
+        fprintf(stderr, "malloc error in pos_to_str (not NOPOS)\n");
         exit(1);
     }
     ret[0] = (pos % 8) + 'a';
@@ -40,5 +48,9 @@ pc_t piece_from_char(const char label) {
 }
 
 const char *piece_to_str(const pc_t piece) {
-    return (piece >= WPAWN && piece <= BKING) ? _piece_str_map[piece] : "-";
+    if (piece <= BKING) {
+        return _piece_str_map[piece];
+    } else {
+        return "-";
+    }
 }

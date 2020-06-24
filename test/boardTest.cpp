@@ -27,8 +27,37 @@ using std::string;
 #define FEN_RAND_8 "7k/Kpp4p/1p4Q1/8/8/B7/8/8 w - -"
 #define FEN_EMPTY "8/8/8/8/8/8/8/8 b - -"
 
-static map<string, vector<unsigned int>> buildCases =
-   {{FEN_START,         {0x31254213, 0x00000000, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0x66666666, 0x978ba879, 1, 1, 1, 1, 1, NOPOS}},
+#define PRINT_TOP_PAD "    a b c d e f g h\n\n"
+#define PRINT_BOT_PAD "    a b c d e f g h"
+
+class BoardTestCaseDataSingleton {
+    private:
+        BoardTestCaseDataSingleton() {};
+        BoardTestCaseDataSingleton(const BoardTestCaseDataSingleton&) = delete;
+        BoardTestCaseDataSingleton& operator= (const BoardTestCaseDataSingleton&) = delete;
+        static BoardTestCaseDataSingleton *instance;
+
+    public:
+        static BoardTestCaseDataSingleton *getInstance();
+        map<string, vector<unsigned int>> buildCases;
+        map<string, vector<string>> printCases;
+        map<vector<string>, move_t *> applyBasicMoveCases;
+        map<vector<string>, move_t *> applyBasicCaptureCases;
+        map<vector<string>, move_t *> applyCastlingCases;
+        map<vector<string>, move_t *> applyEnPassantCases;
+        map<vector<string>, move_t *> applyPromotionCases;
+};
+
+BoardTestCaseDataSingleton *BoardTestCaseDataSingleton::instance = NULL;
+
+BoardTestCaseDataSingleton *BoardTestCaseDataSingleton::getInstance() {
+    if (instance) {
+        return instance;
+    }
+    instance = new BoardTestCaseDataSingleton();
+
+    instance->buildCases =
+    {{FEN_START,         {0x31254213, 0x00000000, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0x66666666, 0x978ba879, 1, 1, 1, 1, 1, NOPOS}},
     {FEN_E2E4,          {0x31254213, 0x000c0000, 0xcccccccc, 0xccc0cccc, 0xcccccccc, 0xcccccccc, 0x66666666, 0x978ba879, 1, 1, 1, 1, 0, POS('e', 3)}},
     {FEN_C7C5,          {0x31254213, 0x000c0000, 0xcccccccc, 0xccc0cccc, 0xccccc6cc, 0xcccccccc, 0x66666c66, 0x978ba879, 1, 1, 1, 1, 1, POS('c', 6)}},
     {FEN_POST_W_CASTLE, {0xc53c42c3, 0x000ccc00, 0xccccc1cc, 0xccc01ccc, 0xcccccc0c, 0xc67c6ccc, 0x6866cc66, 0x9ccbac79, 0, 0, 1, 1, 0, NOPOS}},
@@ -37,17 +66,14 @@ static map<string, vector<unsigned int>> buildCases =
     {FEN_RAND_8,        {0xcccccccc, 0xcccccccc, 0xccccccc2, 0xcccccccc, 0xcccccccc, 0xc4cccc6c, 0x6cccc665, 0xbccccccc, 0, 0, 0, 0, 1, NOPOS}},
     {FEN_EMPTY,         {0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0xcccccccc, 0, 0, 0, 0, 0, NOPOS}}};
 
-#define PRINT_TOP_PAD "    a b c d e f g h\n\n"
-#define PRINT_BOT_PAD "    a b c d e f g h"
-
-static map<string, vector<string>> printCases =
+    instance->printCases =
    {{FEN_START,         {"8   r n b q k b n r   8\n", "7   p p p p p p p p   7\n", "6   - - - - - - - -   6\n", "5   - - - - - - - -   5\n", "4   - - - - - - - -   4\n", "3   - - - - - - - -   3\n", "2   P P P P P P P P   2\n", "1   R N B Q K B N R   1\n\n"}},
     {FEN_E2E4,          {"8   r n b q k b n r   8\n", "7   p p p p p p p p   7\n", "6   - - - - - - - -   6\n", "5   - - - - - - - -   5\n", "4   - - - - P - - -   4\n", "3   - - - - - - - -   3\n", "2   P P P P - P P P   2\n", "1   R N B Q K B N R   1\n\n"}},
     {FEN_C7C5,          {"8   r n b q k b n r   8\n", "7   p p - p p p p p   7\n", "6   - - - - - - - -   6\n", "5   - - p - - - - -   5\n", "4   - - - - P - - -   4\n", "3   - - - - - - - -   3\n", "2   P P P P - P P P   2\n", "1   R N B Q K B N R   1\n\n"}},
     {FEN_RAND_32,       {"8   - - - - - b - -   8\n", "7   P - P N - B - r   7\n", "6   p n Q p - - - -   6\n", "5   - p - P P p p -   5\n", "4   P q R - p - - R   4\n", "3   P P r - - P - b   3\n", "2   p p - k - K - B   2\n", "1   - - - - N - n -   1\n\n"}},
     {FEN_EMPTY,         {"8   - - - - - - - -   8\n", "7   - - - - - - - -   7\n", "6   - - - - - - - -   6\n", "5   - - - - - - - -   5\n", "4   - - - - - - - -   4\n", "3   - - - - - - - -   3\n", "2   - - - - - - - -   2\n", "1   - - - - - - - -   1\n\n"}}};
 
-static map<vector<string>, move_t *> applyBasicMoveCases =
+    instance->applyBasicMoveCases =
    {{{"8/8/8/8/8/2P5/8/8 w KQkq -", "8/8/8/8/2P5/8/8/8 b KQkq -"}, move_make(POS('c', 3), POS('c', 4), NOPOS, WPAWN, WPAWN, NOPC)},
     {{"8/8/8/8/8/8/4P3/8 w KQkq -", "8/8/8/8/4P3/8/8/8 b KQkq e3"}, move_make(POS('e', 2), POS('e', 4), NOPOS, WPAWN, WPAWN, NOPC)},
     {{"8/8/8/3N4/8/8/8/8 w KQkq -", "8/8/8/8/8/4N3/8/8 b KQkq -"}, move_make(POS('d', 5), POS('e', 3), NOPOS, WKNIGHT, WKNIGHT, NOPC)},
@@ -64,8 +90,8 @@ static map<vector<string>, move_t *> applyBasicMoveCases =
     {{"r7/8/8/8/8/8/8/8 b KQkq -", "1r6/8/8/8/8/8/8/8 w KQk -"}, move_make(POS('a', 8), POS('b', 8), NOPOS, BROOK, BROOK, NOPC)},
     {{"8/8/8/4q3/8/8/8/8 b Kq c3", "8/8/8/8/8/8/8/q7 w Kq -"}, move_make(POS('e', 5), POS('a', 1), NOPOS, BQUEEN, BQUEEN, NOPC)},
     {{"4k3/8/8/8/8/8/8/8 b kq -", "3k4/8/8/8/8/8/8/8 w - -"}, move_make(POS('e', 8), POS('d', 8), NOPOS, BKING, BKING, NOPC)}};
-
-static map<vector<string>, move_t *> applyBasicCaptureCases =
+    
+    instance->applyBasicCaptureCases =
    {{{"8/8/8/3p4/2P5/8/8/8 w KQkq -", "8/8/8/3P4/8/8/8/8 b KQkq -"}, move_make(POS('c', 4), POS('d', 5), POS('d', 5), WPAWN, WPAWN, BPAWN)},
     {{"8/8/8/8/8/2b5/8/1N6 w KQkq f8", "8/8/8/8/8/2N5/8/8 b KQkq -"}, move_make(POS('b', 1), POS('c', 3), POS('c', 3), WKNIGHT, WKNIGHT, BBISHOP)},
     {{"8/8/8/B7/8/2q5/8/8 w KQkq -", "8/8/8/8/8/2B5/8/8 b KQkq -"}, move_make(POS('a', 5), POS('c', 3), POS('c', 3), WBISHOP, WBISHOP, BQUEEN)},
@@ -79,18 +105,18 @@ static map<vector<string>, move_t *> applyBasicCaptureCases =
     {{"8/8/8/8/8/8/5q2/5R2 b - b3", "8/8/8/8/8/8/8/5q2 w - -"}, move_make(POS('f', 2), POS('f', 1), POS('f', 1), BQUEEN, BQUEEN, WROOK)},
     {{"4k3/3N4/8/8/8/8/8/8 b Qkq -", "8/3k4/8/8/8/8/8/8 w Q -"}, move_make(POS('e', 8), POS('d', 7), POS('d', 7), BKING, BKING, WKNIGHT)},
     {{"rnbq1k1r/pp1Pbppp/2p5/8/1PB5/8/P1P1NnPP/RNBQK2R b KQ -", "rnbq1k1r/pp1Pbppp/2p5/8/1PB5/8/P1P1N1PP/RNBQK2n w Q -"}, move_make(POS('f', 2), POS('h', 1), POS('h', 1), BKNIGHT, BKNIGHT, WROOK)}};  // if an uncastled rook is captured, can't castle on that side anymore
-
-static map<vector<string>, move_t *> applyCastlingCases =
-  {{{"8/8/8/8/8/8/8/4K2R w K -", "8/8/8/8/8/8/8/5RK1 b - -"}, move_make(POS('e', 1), POS('g', 1), NOPOS, WKING, WKING, NOPC)},
-   {{"8/8/8/8/8/8/8/R3K3 w Qkq -", "8/8/8/8/8/8/8/2KR4 b kq -"}, move_make(POS('e', 1), POS('c', 1), NOPOS, WKING, WKING, NOPC)},
-   {{"4k2r/8/8/8/8/8/8/8 b KQk -", "5rk1/8/8/8/8/8/8/8 w KQ -"}, move_make(POS('e', 8), POS('g', 8), NOPOS, BKING, BKING, NOPC)},
-   {{"r3k3/8/8/8/8/8/8/8 b q -", "2kr4/8/8/8/8/8/8/8 w - -"}, move_make(POS('e', 8), POS('c', 8), NOPOS, BKING, BKING, NOPC)}};
-
-static map<vector<string>, move_t *> applyEnPassantCases =
+    
+    instance->applyCastlingCases =
+   {{{"8/8/8/8/8/8/8/4K2R w K -", "8/8/8/8/8/8/8/5RK1 b - -"}, move_make(POS('e', 1), POS('g', 1), NOPOS, WKING, WKING, NOPC)},
+    {{"8/8/8/8/8/8/8/R3K3 w Qkq -", "8/8/8/8/8/8/8/2KR4 b kq -"}, move_make(POS('e', 1), POS('c', 1), NOPOS, WKING, WKING, NOPC)},
+    {{"4k2r/8/8/8/8/8/8/8 b KQk -", "5rk1/8/8/8/8/8/8/8 w KQ -"}, move_make(POS('e', 8), POS('g', 8), NOPOS, BKING, BKING, NOPC)},
+    {{"r3k3/8/8/8/8/8/8/8 b q -", "2kr4/8/8/8/8/8/8/8 w - -"}, move_make(POS('e', 8), POS('c', 8), NOPOS, BKING, BKING, NOPC)}};
+    
+    instance->applyEnPassantCases =
    {{{"8/8/8/5Pp1/8/8/8/8 w KQkq g6", "8/8/6P1/8/8/8/8/8 b KQkq -"}, move_make(POS('f', 5), POS('g', 6), POS('g', 5), WPAWN, WPAWN, BPAWN)},
     {{"8/8/8/8/Pp6/8/8/8 b KQkq a3", "8/8/8/8/8/p7/8/8 w KQkq -"}, move_make(POS('b', 4), POS('a', 3), POS('a', 4), BPAWN, BPAWN, WPAWN)}};
-
-static map<vector<string>, move_t *> applyPromotionCases =
+    
+    instance->applyPromotionCases =
    {{{"8/3P4/8/8/8/8/8/8 w KQkq a6", "3Q4/8/8/8/8/8/8/8 b KQkq -"}, move_make(POS('d', 7), POS('d', 8), NOPOS, WPAWN, WQUEEN, NOPC)},
     {{"8/1P6/8/8/8/8/8/8 w KQk d6", "1R6/8/8/8/8/8/8/8 b KQk -"}, move_make(POS('b', 7), POS('b', 8), NOPOS, WPAWN, WROOK, NOPC)},
     {{"8/7P/8/8/8/8/8/8 w KQ g6", "7B/8/8/8/8/8/8/8 b KQ -"}, move_make(POS('h', 7), POS('h', 8), NOPOS, WPAWN, WBISHOP, NOPC)},
@@ -99,42 +125,70 @@ static map<vector<string>, move_t *> applyPromotionCases =
     {{"8/8/8/8/8/8/3p4/8 b kq e3", "8/8/8/8/8/8/8/3r4 w kq -"}, move_make(POS('d', 2), POS('d', 1), NOPOS, BPAWN, BROOK, NOPC)},
     {{"8/8/8/8/8/8/5p2/8 b q h3", "8/8/8/8/8/8/8/5b2 w q -"}, move_make(POS('f', 2), POS('f', 1), NOPOS, BPAWN, BBISHOP, NOPC)},
     {{"8/8/8/8/8/8/p7/8 b - -", "8/8/8/8/8/8/8/n7 w - -"}, move_make(POS('a', 2), POS('a', 1), NOPOS, BPAWN, BKNIGHT, NOPC)}};
+    
+    return instance;
+}
 
 TEST(BoardTest, ValConstruct) {
+    board_t *b;
+
+    map<string, vector<unsigned int>> buildCases = BoardTestCaseDataSingleton::getInstance()->buildCases;
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
-        board_t *b = board_make(it->first.c_str());
+        b = board_make(it->first.c_str());
         for (int i = 0; i < 8; ++i) {
             EXPECT_EQ(b->ranks[i], it->second[i]) << "diff at rank " << i << " on build" << endl;
         }
-        EXPECT_EQ(FLAGS_WKCASTLE(b->flags), it->second[8]) << "wrong white kingside castling priv bit" << endl;
-        EXPECT_EQ(FLAGS_WQCASTLE(b->flags), it->second[9]) << "wrong white queenside castling priv bit" << endl;
-        EXPECT_EQ(FLAGS_BKCASTLE(b->flags), it->second[10]) << "wrong black kingside castling priv bit" << endl;
-        EXPECT_EQ(FLAGS_BQCASTLE(b->flags), it->second[11]) << "wrong black queenside castling priv bit" << endl;
+        EXPECT_EQ(FLAGS_WKCASTLE(b->flags), it->second[8]) << "wrong white kingside castling privilege bit" << endl;
+        EXPECT_EQ(FLAGS_WQCASTLE(b->flags), it->second[9]) << "wrong white queenside castling privilege bit" << endl;
+        EXPECT_EQ(FLAGS_BKCASTLE(b->flags), it->second[10]) << "wrong black kingside castling privilege bit" << endl;
+        EXPECT_EQ(FLAGS_BQCASTLE(b->flags), it->second[11]) << "wrong black queenside castling privilege bit" << endl;
         EXPECT_EQ(FLAGS_WPLAYER(b->flags), it->second[12]) << "wrong player bit" << endl;
-        EXPECT_NE(FLAGS_BPLAYER(b->flags), it->second[12]) << "both white and black player ???" << endl;
+        EXPECT_NE(FLAGS_BPLAYER(b->flags), it->second[12]) << "both white and black player bits set" << endl;
         EXPECT_EQ(FLAGS_EP(b->flags), it->second[13]) << "wrong ep position" << endl;
+
+        // cleanup
+        board_free(b);
     }
 }
 
 TEST(BoardTest, CpyConstruct) {
+    board_t *b1;
+    board_t *b2;
+
+    map<string, vector<unsigned int>> buildCases = BoardTestCaseDataSingleton::getInstance()->buildCases;
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
-        board_t *b1 = board_make(it->first.c_str());
-        board_t *b2 = board_copy(b1);
+        b1 = board_make(it->first.c_str());
+        b2 = board_copy(b1);
         for (int i = 0; i < 8; ++i) {
             EXPECT_EQ(b2->ranks[i], b1->ranks[i]) << "diff at rank " << i << " on cpy construct" << endl;
         }
         EXPECT_EQ(b2->flags, b1->flags) << "diff flags on cpy construct" << endl;
+
+        // cleaup
+        board_free(b1);
+        board_free(b2);
     }
 }
 
 TEST(BoardTest, MakeFen) {
+    board_t *b;
+
+    map<string, vector<unsigned int>> buildCases = BoardTestCaseDataSingleton::getInstance()->buildCases;
     for (auto it = buildCases.begin(); it != buildCases.end(); ++it) {
-        board_t *b = board_make(it->first.c_str());
-        EXPECT_EQ(it->first, board_to_fen(b)) << "diff fen post on gen post construct";
+        b = board_make(it->first.c_str());
+        char *fen = board_to_fen(b);
+        EXPECT_EQ(it->first, fen) << "unexpected fen " << fen << " generated by board which was constructed using fen " << it->first << endl;
+
+        // cleanup
+        free(fen);
+        board_free(b);
     }
 }
 
 TEST(BoardTest, PrintOp) {
+    board_t *b;
+
+    map<string, vector<string>> printCases = BoardTestCaseDataSingleton::getInstance()->printCases;
     for (auto it = printCases.begin(); it != printCases.end(); ++it) {
         // expected
         string expect(PRINT_TOP_PAD);
@@ -142,48 +196,51 @@ TEST(BoardTest, PrintOp) {
             expect.append(it->second[i]);
         }
         expect.append(PRINT_BOT_PAD);
+
         // actual
-        board_t *b = board_make(it->first.c_str());
-        EXPECT_EQ(board_to_tui(b), expect);
+        b = board_make(it->first.c_str());
+        char *tui = board_to_tui(b);
+        EXPECT_EQ(tui, expect) << "unexpected tui " << tui << " generated by board which was constructed using fen " << it->first << "; expected tui " << expect << endl;
+
+        // cleanup
+        free(tui);
+        board_free(b);
     }
 }
 
-TEST(BoardTest, ApplyBasic) {
-    for (auto it = applyBasicMoveCases.begin(); it != applyBasicMoveCases.end(); ++it) {
-        board_t *b = board_make(it->first[0].c_str());
-        board_apply_move(b, it->second);
-        EXPECT_EQ(board_to_fen(b), it->first[1]) << "diff at move " << it->second << endl;
+#ifndef APPLY_AND_TEST_CASES
+#define APPLY_AND_TEST_CASES(cases) \
+    for (auto it = cases.begin(); it != cases.end(); ++it) { \
+        /* construct a board from the starting fen */ \
+        board_t *b = board_make(it->first[0].c_str()); \
+        /* apply the move */ \
+        board_apply_move(b, it->second); \
+        /* fen after applying the move should match expected */ \
+        char *fen = board_to_fen(b); \
+        EXPECT_EQ(fen, it->first[1]) << "unexpected fen " << fen << " after applying move " << it->second << " to board with fen " << it->first[0] << endl; \
+        \
+        /* cleanup */ \
+        free(fen); \
+        board_free(b); \
     }
+#endif
+
+TEST(BoardTest, ApplyBasic) {
+    APPLY_AND_TEST_CASES(BoardTestCaseDataSingleton::getInstance()->applyBasicMoveCases);
 }
 
 TEST(BoardTest, ApplyCaptureBasic) {
-    for (auto it = applyBasicCaptureCases.begin(); it != applyBasicCaptureCases.end(); ++it) {
-        board_t *b = board_make(it->first[0].c_str());
-        board_apply_move(b, it->second);
-        EXPECT_EQ(board_to_fen(b), it->first[1]) << "diff at move " << it->second << endl;
-    }
+    APPLY_AND_TEST_CASES(BoardTestCaseDataSingleton::getInstance()->applyBasicCaptureCases);
 }
 
 TEST(BoardTest, ApplyCastling) {
-    for (auto it = applyCastlingCases.begin(); it != applyCastlingCases.end(); ++it) {
-        board_t *b = board_make(it->first[0].c_str());
-        board_apply_move(b, it->second);
-        EXPECT_EQ(board_to_fen(b), it->first[1]) << "diff at move " << it->second << endl;
-    }
+    APPLY_AND_TEST_CASES(BoardTestCaseDataSingleton::getInstance()->applyCastlingCases);
 }
 
 TEST(BoardTest, ApplyEnPassant) {
-    for (auto it = applyEnPassantCases.begin(); it != applyEnPassantCases.end(); ++it) {
-        board_t *b = board_make(it->first[0].c_str());
-        board_apply_move(b, it->second);
-        EXPECT_EQ(board_to_fen(b), it->first[1]) << "diff at move " << it->second << endl;
-    }
+    APPLY_AND_TEST_CASES(BoardTestCaseDataSingleton::getInstance()->applyEnPassantCases);
 }
 
 TEST(BoardTest, ApplyPromotion) {
-    for (auto it = applyPromotionCases.begin(); it != applyPromotionCases.end(); ++it) {
-        board_t *b = board_make(it->first[0].c_str());
-        board_apply_move(b, it->second);
-        EXPECT_EQ(board_to_fen(b), it->first[1]) << "diff at move " << it->second << endl;
-    }
+    APPLY_AND_TEST_CASES(BoardTestCaseDataSingleton::getInstance()->applyPromotionCases);
 }

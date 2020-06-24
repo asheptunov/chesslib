@@ -42,75 +42,39 @@ static map <string, vector<bool>> endgameCases =
     {"rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq -", {true, false}},  // fastest mate
     {"5bnr/4p1pq/4Qpkr/7p/7P/4P3/PPPP1PP1/RNB1KBNR b KQ -", {false, true}}};  // fastest stalemate
 
-string printMoveVec(const vector<move_t *> &moves);
-
 static map<string, map<uint8_t, vector<bool>>> hitCases =
    {{"2kr1b1r/pppqppp1/2n1bn1p/3P4/3P1B2/2NB1N2/PPP2PPP/R2Q1RK1 b - -",
-     {{POS('a', 1), {true, false}},
-      {POS('b', 1), {true, false}},
-      {POS('c', 1), {true, false}},
-      {POS('d', 1), {true, false}},
-      {POS('e', 1), {true, false}},
-      {POS('f', 1), {true, false}},
-      {POS('g', 1), {true, false}},
-      {POS('h', 1), {true, false}},
-      {POS('a', 2), {true, false}},
-      {POS('b', 2), {false, false}},
-      {POS('c', 2), {true, false}},
-      {POS('d', 2), {true, false}},
-      {POS('e', 2), {true, false}},
-      {POS('f', 2), {true, false}},
-      {POS('g', 2), {true, false}},
-      {POS('h', 2), {true, false}},
-      {POS('a', 3), {true, false}},
-      {POS('b', 3), {true, false}},
-      {POS('c', 3), {true, false}},
-      {POS('d', 3), {true, false}},
-      {POS('e', 3), {true, false}},
-      {POS('f', 3), {true, false}},
-      {POS('g', 3), {true, false}},
-      {POS('h', 3), {true, true}},
-      {POS('a', 4), {true, false}},
-      {POS('b', 4), {false, true}},
-      {POS('c', 4), {true, false}},
-      {POS('d', 4), {true, true}},
-      {POS('e', 4), {true, true}},
-      {POS('f', 4), {false, false}},
-      {POS('g', 4), {false, true}},
-      {POS('h', 4), {true, false}},
-      {POS('a', 5), {false, true}},
-      {POS('b', 5), {true, false}},
-      {POS('c', 5), {true, false}},
-      {POS('d', 5), {true, true}},
-      {POS('e', 5), {true, true}},
-      {POS('f', 5), {true, true}},
-      {POS('g', 5), {true, true}},
-      {POS('h', 5), {false, true}},
-      {POS('a', 6), {true, true}},
-      {POS('b', 6), {false, true}},
-      {POS('c', 6), {true, true}},
-      {POS('d', 6), {true, true}},
-      {POS('e', 6), {true, true}},
-      {POS('f', 6), {false, true}},
-      {POS('g', 6), {true, true}},
-      {POS('h', 6), {true, true}},
-      {POS('a', 7), {false, true}},
-      {POS('b', 7), {false, true}},
-      {POS('c', 7), {true, true}},
-      {POS('d', 7), {false, true}},
-      {POS('e', 7), {false, true}},
-      {POS('f', 7), {false, true}},
-      {POS('g', 7), {false, true}},
-      {POS('h', 7), {true, true}},
-      {POS('a', 8), {false, false}},
-      {POS('b', 8), {false, true}},
-      {POS('c', 8), {false, true}},
-      {POS('d', 8), {false, true}},
-      {POS('e', 8), {false, true}},
-      {POS('f', 8), {false, true}},
-      {POS('g', 8), {false, true}},
-      {POS('h', 8), {false, false}}}}
+     {{POS('a', 1), {true, false}},  {POS('b', 1), {true, false}},  {POS('c', 1), {true, false}}, {POS('d', 1), {true, false}},
+      {POS('e', 1), {true, false}},  {POS('f', 1), {true, false}},  {POS('g', 1), {true, false}}, {POS('h', 1), {true, false}},
+      {POS('a', 2), {true, false}},  {POS('b', 2), {false, false}}, {POS('c', 2), {true, false}}, {POS('d', 2), {true, false}},
+      {POS('e', 2), {true, false}},  {POS('f', 2), {true, false}},  {POS('g', 2), {true, false}}, {POS('h', 2), {true, false}},
+      {POS('a', 3), {true, false}},  {POS('b', 3), {true, false}},  {POS('c', 3), {true, false}}, {POS('d', 3), {true, false}},
+      {POS('e', 3), {true, false}},  {POS('f', 3), {true, false}},  {POS('g', 3), {true, false}}, {POS('h', 3), {true, true}},
+      {POS('a', 4), {true, false}},  {POS('b', 4), {false, true}},  {POS('c', 4), {true, false}}, {POS('d', 4), {true, true}},
+      {POS('e', 4), {true, true}},   {POS('f', 4), {false, false}}, {POS('g', 4), {false, true}}, {POS('h', 4), {true, false}},
+      {POS('a', 5), {false, true}},  {POS('b', 5), {true, false}},  {POS('c', 5), {true, false}}, {POS('d', 5), {true, true}},
+      {POS('e', 5), {true, true}},   {POS('f', 5), {true, true}},   {POS('g', 5), {true, true}},  {POS('h', 5), {false, true}},
+      {POS('a', 6), {true, true}},   {POS('b', 6), {false, true}},  {POS('c', 6), {true, true}},  {POS('d', 6), {true, true}},
+      {POS('e', 6), {true, true}},   {POS('f', 6), {false, true}},  {POS('g', 6), {true, true}},  {POS('h', 6), {true, true}},
+      {POS('a', 7), {false, true}},  {POS('b', 7), {false, true}},  {POS('c', 7), {true, true}},  {POS('d', 7), {false, true}},
+      {POS('e', 7), {false, true}},  {POS('f', 7), {false, true}},  {POS('g', 7), {false, true}}, {POS('h', 7), {true, true}},
+      {POS('a', 8), {false, false}}, {POS('b', 8), {false, true}},  {POS('c', 8), {false, true}}, {POS('d', 8), {false, true}},
+      {POS('e', 8), {false, true}},  {POS('f', 8), {false, true}},  {POS('g', 8), {false, true}}, {POS('h', 8), {false, false}}}}
    };
+
+string printMoveVec(const vector<move_t *> &moves);
+
+string printMoveVec(const vector<move_t *> &moves) {
+   string ret;
+   char *str;
+   for (const auto &mv : moves) {
+      ret += " ";
+      str = move_str(mv);
+      ret += str;
+      free(str);
+   }
+   return ret;
+}
 
 TEST(BoardMoveGenTest, MoveList) {
    for (auto it = genCases.begin(); it != genCases.end(); ++it) {
@@ -139,6 +103,8 @@ TEST(BoardMoveGenTest, MoveList) {
          << std::endl << "\tExp" << expectStr;
 
       if ((actual.size() != expect.size()) || actual.size() == 0) {
+         alst_free(actual_, (void (*) (void *)) move_free);
+         board_free(b);
          continue;
       }
 
@@ -148,17 +114,27 @@ TEST(BoardMoveGenTest, MoveList) {
 
       move_t *m1;
       move_t *m2;
+      char *ms1;
+      char *ms2;
       for (size_t i = 0; i < actual.size(); ++i) {
          m1 = actual[i];
          m2 = expect[i];
-         EXPECT_EQ(strcmp(move_str(m1), move_str(m2)), 0) << "Move diff; got " << move_str(m1) << " but expected " << move_str(m2);
+         ms1 = move_str(m1);
+         ms2 = move_str(m2);
+         EXPECT_EQ(strcmp(ms1, ms2), 0) << "Move diff; got " << ms1 << " but expected " << ms2;
          EXPECT_EQ(m1->frompos, m2->frompos);
          EXPECT_EQ(m1->frompc, m2->frompc);
          EXPECT_EQ(m1->topos, m2->topos);
          EXPECT_EQ(m1->topc, m2->topc);
          EXPECT_EQ(m1->killpos, m2->killpos);
          EXPECT_EQ(m1->killpc, m2->killpc);
+         free(expect[i]);
+         free(ms1);
+         free(ms2);
       }
+
+      alst_free(actual_, (void (*) (void *)) move_free);
+      board_free(b);
    }
 }
 
@@ -171,16 +147,9 @@ TEST(BoardMoveGenTest, Endgame) {
 
         EXPECT_EQ(board_is_mate(b), expect[0]);
         EXPECT_EQ(board_is_stalemate(b), expect[1]);
-    }
-}
 
-string printMoveVec(const vector<move_t *> &moves) {
-   string ret;
-   for (const auto &mv : moves) {
-      ret += " ";
-      ret += move_str(mv);
-   }
-   return ret;
+        board_free(b);
+    }
 }
 
 TEST(BoardMoveGenTest, HitCheck) {
@@ -189,8 +158,12 @@ TEST(BoardMoveGenTest, HitCheck) {
       for (const auto &posToHitCase : it->second) {
          uint8_t pos = posToHitCase.first;
          vector<bool> expect = posToHitCase.second;
-         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, true), expect[0]) << "diff for white hits on pos " << std::to_string(pos) << " for fen " << board_to_fen(b);
-         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, false), expect[1]) << "diff for black hits on pos " << std::to_string(pos) << " for fen " << board_to_fen(b);
+         char *fen = board_to_fen(b);
+         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, true), expect[0]) << "diff for white hits on pos " << std::to_string(pos) << " for fen " << fen;
+         EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, false), expect[1]) << "diff for black hits on pos " << std::to_string(pos) << " for fen " << fen;
+         free(fen);
       }
+
+      board_free(b);
    }
 }

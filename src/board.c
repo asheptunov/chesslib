@@ -8,15 +8,17 @@
 // implementation from https://stackoverflow.com/questions/46013382/c-strndup-implicit-declaration
 char *_strdup(const char *s) {
     size_t size = strlen(s) + 1;
-    char *p = malloc(size);
-    if (p != NULL) {
-        memcpy(p, s, size);
+    char *p = (char *) malloc(size);
+    if (p == NULL) {
+        fprintf(stderr, "malloc() error in _strdup\n");
+        exit(1);
     }
+    memcpy(p, s, size);
     return p;
 }
 
 board_t *board_make(const char *fen) {
-    board_t *ret = (board_t *) malloc(sizeof(board_t));
+    board_t *ret = (board_t *) calloc(1, sizeof(board_t));
     char *fencpy = _strdup(fen);  // mutability
     char *board_p = strtok(fencpy, " ");  // split off board data
     char *player_p = strtok(NULL, " ");  // split off player data
@@ -48,7 +50,6 @@ board_t *board_make(const char *fen) {
             offs += (pc == NOPC) ? fenranks[8 - rk][i] - '0' : 1;
         }
     }
-    free(fencpy);
 
     // set player bits from fen player data
     SETPLAYER((strcmp("w", player_p) ? BPLAYER : WPLAYER), ret->flags);
@@ -63,11 +64,16 @@ board_t *board_make(const char *fen) {
     // set en passant bits and position from fen ep data
     SETEP(strchr(ep_p, '-') ? NOPOS : POS(ep_p[0], ep_p[1] - '0'), ret->flags);
 
+    free(fencpy);
     return ret;
 }
 
 board_t *board_copy(const board_t *other) {
     board_t *ret = (board_t *) malloc(sizeof(board_t));
+    if (!ret) {
+        fprintf(stderr, "malloc error in board_copy\n");
+        exit(1);
+    }
     memcpy(&ret->ranks, &other->ranks, sizeof(int32_t) * 8);  // copy ranks
     ret->flags = other->flags;  // copy flags
     return ret;
@@ -180,7 +186,11 @@ int board_is_mate(const board_t *board) {
         return 0;
     }
 
-    return board_get_moves(board)->len == 0;  // in check and no moves -> mate
+    int ret = 0;
+    alst_t *moves = board_get_moves(board);
+    ret = moves->len == 0;  // in check and no moves -> mate
+    alst_free(moves, (void (*) (void *)) move_free);
+    return ret;
 }
 
 int board_is_stalemate(const board_t *board) {
@@ -192,13 +202,21 @@ int board_is_stalemate(const board_t *board) {
         return 0;
     }
 
-    return board_get_moves(board)->len == 0;  // not in check and no moves -> stalemate
+    int ret = 0;
+    alst_t *moves = board_get_moves(board);
+    ret = moves->len == 0;  // not in check and no moves -> stalemate
+    alst_free(moves, (void (*) (void *)) move_free);
+    return ret;
 }
 
 // caller responsible for freeing returned buffer
 char *board_to_fen(const board_t *board) {
     // make output buffer
     char *ret = (char *) malloc(100 * sizeof(char));
+    if (!ret) {
+        fprintf(stderr, "malloc error in board_to_fen\n");
+        exit(1);
+    }
     ret[0] = '\0';
     // encode rank data
     int blanks;
@@ -246,7 +264,9 @@ char *board_to_fen(const board_t *board) {
     }
     strcat(ret, " ");
     // encode en passant data
-    strcat(ret, pos_to_str(FLAGS_EP(board->flags)));  // NOPOS auto handled
+    char *eppos = pos_to_str(FLAGS_EP(board->flags));
+    strcat(ret, eppos);  // NOPOS auto handled
+    free(eppos);
     // encode turn timer
     // TODO:
     return ret;
@@ -255,6 +275,10 @@ char *board_to_fen(const board_t *board) {
 // caller responsible for freeing returned buffer
 char *board_to_tui(const board_t *board) {
     char *ret = (char *) malloc(1024 * sizeof(char));
+    if (!ret) {
+        fprintf(stderr, "malloc error in board_to_tui\n");
+        exit(1);
+    }
     ret[0] = '\0';
     strcat(ret, "    a b c d e f g h\n\n");  // \n is board top/bottom padding
     uint32_t rank;

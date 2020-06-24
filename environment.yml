@@ -1,0 +1,6 @@
+name: chesslib
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - memory_profiler=0.57.0

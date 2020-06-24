@@ -16,6 +16,8 @@ move_t *move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t t
 
 move_t *move_make_algnot(const char *algnot);
 
+move_t *move_cpy(move_t *other);
+
 void move_free(move_t *move);
 
 // int move_equal(const move_t *a, const move_t *b);

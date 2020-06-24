@@ -1,4 +1,5 @@
-from ctypes import *
+import os
+import ctypes
 
 import chess
 
@@ -40,57 +41,51 @@ def pcval(pc):
   return 0
 
 
-ctr = 0  # for debugging
-
 def minimax(evaluate, board, depth):
   '''
   performs minimax search from the current board position, exploring down to a given depth;
   returns the optimal move from the current position (None if there are no moves, or depth is 0) and the value of the board when applying that move
   '''
-  global ctr
-  retpaths = []
-
   if depth <= 0:
-    ctr += 1
-    return (None, evaluate(board), retpaths)
+    return (None, evaluate(board))
 
-  # get moves
-  moves_alst = chess.board_get_moves(board)
-  moves = chess.alst_to_vector(moves_alst, POINTER(chess.MOVE))
-  chess.alst_free(moves_alst)
+  moves = chess.board_get_moves(board)
 
-  # print(len(moves), [chess.move_str(m) for m in moves])
-
-  if len(moves) == 0:
+  if moves.contents.len == 0:
     # active player has no moves; loss or stalemate
-    ctr += 1
-    return (None, -100_000 - depth, retpaths)
+    chess.alst_free(moves, ctypes.cast(chess.move_free, chess.alst_free_func_type))
+    return (None, -100_000 - depth)
 
-  max_utility = -float('inf')
   max_utility_move = None
-  for move in moves:
+  max_utility = -float('inf')
+  for i in range(moves.contents.len):
+    move = ctypes.cast(chess.alst_get(moves, i), ctypes.POINTER(chess.MOVE))
     future_board = chess.board_copy(board)
     chess.board_apply_move(future_board, move)
-
-    opp_utility, _, childpaths = minimax(evaluate, future_board, depth - 1)
-
-    if len(childpaths) == 0:
-      retpaths.append(chess.move_str(move))
-    else:
-      for i in range(len(childpaths)):
-        retpaths.append(chess.move_str(move) + '>' + childpaths[i])
+    opp_best_move, opp_utility = minimax(evaluate, future_board, depth - 1)
+    chess.move_free(opp_best_move)
+    chess.board_free(future_board)
 
     utility = -opp_utility  # negate since this is the opponent's maximal utility, which is our minimal utility
     if (utility > max_utility):
       max_utility = utility
       max_utility_move = move
 
-  return (max_utility_move, max_utility, retpaths)
+  max_utility_move = chess.move_cpy(max_utility_move)  # copy it so we don't lose the data when we free the alst below
+  chess.alst_free(moves, ctypes.cast(chess.move_free, chess.alst_free_func_type))
+  return (max_utility_move, max_utility)
 
 # use for debugging
 if __name__ == '__main__':
-    board = chess.board_make('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ -')
-    utility, move, paths = minimax.minimax(minimax.evaluate, board, 3)
-    print('board', os.linesep, chess.board_to_tui(board))
-    print('paths', os.linesep, os.linesep.join(sorted(paths)))
-    print('nodes explored', minimax.ctr)
+    board = chess.board_make('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -')
+    depth = 5
+    move, utility = minimax(evaluate, board, depth)
+    print(chess.board_to_tui(board))
+    print('searched to depth %d' % depth)
+    print('best move %s' % chess.move_str(move))
+    print('utility %d' % utility)
+
+    # cleanup
+    chess.board_free(board)
+    if move:
+      chess.move_free(move)

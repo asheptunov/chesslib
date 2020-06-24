@@ -42,7 +42,7 @@ TEST(MoveTest, ValConstruct) {
         EXPECT_EQ(m->frompc, it->first[3]) << "diff at " << it->second[0];
         EXPECT_EQ(m->topc, it->first[4]) << "diff at " << it->second[0];
         EXPECT_EQ(m->killpc, it->first[5]) << "diff at " << it->second[0];
-        free(m);
+        move_free(m);
     }
 }
 
@@ -60,7 +60,13 @@ TEST(MoveTest, AlgNotConstruct) {
         EXPECT_EQ(move_is_ep(m1), move_is_ep(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_promo(m1), move_is_promo(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_castle(m1), move_is_castle(m2)) << "diff at " << it->second[0];
-        EXPECT_EQ(strcmp(move_str(m1), move_str(m2)), 0) << "diff at " << it->second[0];
+        char *str1 = move_str(m1);
+        char *str2 = move_str(m2);
+        EXPECT_EQ(strcmp(str1, str2), 0) << "diff at " << it->second[0];
+        free(str1);
+        free(str2);
+        move_free(m1);
+        move_free(m2);
     }
 }
 
@@ -68,6 +74,7 @@ TEST(MoveTest, IsCapture) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_cap(m), it->first[6]) << "diff at " << it->second[0];
+        move_free(m);
     }
 }
 
@@ -75,6 +82,7 @@ TEST(MoveTest, IsEnPassant) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_ep(m), it->first[7]) << "diff at " << it->second[0];
+        move_free(m);
     }
 }
 
@@ -82,6 +90,7 @@ TEST(MoveTest, IsPromotion) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_promo(m), it->first[8]) << "diff at " << it->second[0];
+        move_free(m);
     }
 }
 
@@ -89,13 +98,17 @@ TEST(MoveTest, CastleType) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_castle(m), it->first[9]) << "diff at " << it->second[0];
+        move_free(m);
     }
 }
 
 TEST(MoveTest, Print) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
-        EXPECT_EQ(strcmp(move_str(m), it->second[0].c_str()), 0) << "diff at " << it->second[0];
+        char *str = move_str(m);
+        EXPECT_EQ(strcmp(str, it->second[0].c_str()), 0) << "diff at " << it->second[0];
+        free(str);
+        move_free(m);
     }
 }
 
@@ -104,33 +117,33 @@ TEST(MoveTest, LessThan) {
     move_t *m2 = move_make_algnot("ke1e2");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
-    free(m1);
-    free(m2);
+    move_free(m1);
+    move_free(m2);
 
     m1 = move_make_algnot("Qe1e2");
     m2 = move_make_algnot("Ke1e2");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
-    free(m1);
-    free(m2);
+    move_free(m1);
+    move_free(m2);
 
     m1 = move_make_algnot("Pe2e3");
     m2 = move_make_algnot("Pe2e4");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
-    free(m1);
-    free(m2);
+    move_free(m1);
+    move_free(m2);
 
     m1 = move_make_algnot("rb2b5");
     m2 = move_make_algnot("rb3b5");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
-    free(m1);
-    free(m2);
+    move_free(m1);
+    move_free(m2);
 
     m1 = move_make_algnot("Na1b3");
     m2 = move_make_algnot("Na1b3");
     ASSERT_FALSE(move_cmp(m1, m2));
-    free(m1);
-    free(m2);
+    move_free(m1);
+    move_free(m2);
 }

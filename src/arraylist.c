@@ -19,8 +19,18 @@ alst_t *alst_make(size_t cap) {
   return ret;
 }
 
-void alst_free(alst_t *list) {
+void alst_free(alst_t *list, void (*free_func)(void *)) {
+  if (!free_func) {
+    goto ALST_FREE_DONE;
+  }
+  // free all the elements
+  for (size_t i = 0; i < list->len; ++i) {
+    free_func(list->data[i]);
+  }
+ALST_FREE_DONE:
+  // free the array
   free(list->data);
+  free(list);
 }
 
 void alst_put(alst_t *list, size_t i, void *val) {

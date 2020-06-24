@@ -38,6 +38,11 @@ move_make_algnot_lib.restype = POINTER(MOVE)
 def move_make_algnot(algnot):
   return move_make_algnot_lib(algnot.encode('ascii'))
 
+# move_t *move_cpy(move_t *other);
+move_cpy = lib.move_cpy
+move_cpy.argtypes = [POINTER(MOVE)]
+move_cpy.restype = POINTER(MOVE)
+
 # void move_free(move_t *move);
 move_free = lib.move_free
 move_free.argtypes = [POINTER(MOVE)]
@@ -72,7 +77,12 @@ move_str_lib = lib.move_str
 move_str_lib.argtypes = [POINTER(MOVE)]
 move_str_lib.restype = c_char_p
 def move_str(move):
-  return move_str_lib(move).decode('ascii')
+  if not move:
+    return None
+  move_str_bytes = move_str_lib(move)
+  move_str = move_str_bytes.decode('ascii')
+  # free(move_str_bytes)
+  return move_str
 
 '''
 BOARD_T
@@ -118,14 +128,20 @@ board_to_fen_lib = lib.board_to_fen
 board_to_fen_lib.argtypes = [POINTER(BOARD)]
 board_to_fen_lib.restype = c_char_p
 def board_to_fen(board):
-  return board_to_fen_lib(board).decode('ascii')
+  fen_bytes = board_to_fen_lib(board)
+  fen = fen_bytes.decode('ascii')
+  # free(fen_bytes)
+  return fen
 
 # char *board_to_tui(const board_t *board);
 board_to_tui_lib = lib.board_to_tui
 board_to_tui_lib.argtypes = [POINTER(BOARD)]
 board_to_tui_lib.restype = c_char_p
 def board_to_tui(board):
-  return board_to_tui_lib(board).decode('ascii')
+  tui_bytes = board_to_tui_lib(board)
+  tui = tui_bytes.decode('ascii')
+  # free(tui_bytes)
+  return tui
 
 # int _board_hit(const board_t *board, const int rk, const int offs, const int white);
 _board_hit = lib._board_hit
@@ -143,7 +159,8 @@ alst_make.restype = POINTER(ALST)
 
 # void alst_free(alst_t *list);
 alst_free = lib.alst_free
-alst_free.argtypes = [POINTER(ALST)]
+alst_free_func_type = CFUNCTYPE(None, c_void_p)
+alst_free.argtypes = [POINTER(ALST), alst_free_func_type]
 
 # void alst_put(alst_t *list, size_t i, void *val);
 alst_put = lib.alst_put
@@ -157,11 +174,3 @@ alst_get.restype = c_void_p
 # void alst_append(alst_t *list, void *val);
 alst_append = lib.alst_append
 alst_append.argtypes = [POINTER(ALST), c_void_p]
-
-def alst_to_vector(alst, vector_type):
-  return [cast(alst_get(alst, i), vector_type) for i in range(alst.contents.len)]
-
-if __name__ == '__main__':
-  # b = board_make('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -')
-  b = board_make('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3')
-  print(board_to_tui(b))
