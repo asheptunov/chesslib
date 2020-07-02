@@ -55,6 +55,8 @@ UNIT_TESTS =$(CHESS_BIN)/moveTest        \
 			$(CHESS_BIN)/arraylistTest   \
 			$(CHESS_BIN)/movegenTest
 
+PERFT_TEST = $(CHESS_BIN)/perftTest
+
 SYSTEM_TESTS = $(CHESS_TST)/perftTest.py
 
 MEM_TESTS = $(CHESS_TST)/memTest.py
@@ -68,7 +70,7 @@ init:
 	@if [ -d "$(CHESS_OBJ)" ]; then rm -Rf $(CHESS_OBJ); fi
 	@if [ -d "googletest" ]; then rm -Rf googletest; fi
 	@if [ -d "log" ]; then rm -Rf log; fi
-	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; mkdir log
+	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; mkdir log ; mkdir data
 	@echo "fetching dependencies"
 	@ROOTDIR=$(pwd)
 	@git clone https://github.com/google/googletest.git
@@ -87,6 +89,9 @@ systemtest: $(SYSTEM_TESTS)
 
 memtest: $(MEM_TESTS)
 	@$(PY) $(PYFLAGS) test.memTest -v
+
+perfttest: $(PERFT_TEST)
+	$^
 
 test: unittest systemtest memtest
 
@@ -111,7 +116,7 @@ $(CHESS_OBJ)/src/algnot.c: $(CHESS_SRC)/algnot.flex
 
 $(CHESS_TST)/perftTest.py: $(LIBS)
 
-$(CHESS_TST)/memTest.py: $(LIBS) $(UNIT_TESTS)
+$(CHESS_TST)/memTest.py: $(LIBS) $(UNIT_TESTS) $(PERFT_TEST)
 
 # ------------------------
 # >>>> OBJECT RECIPES <<<<
@@ -146,6 +151,9 @@ $(CHESS_OBJ)/test/arraylistTest.o: $(CHESS_TST)/arraylistTest.cpp $(CHESS_HDR)
 $(CHESS_OBJ)/test/movegenTest.o: $(CHESS_TST)/movegenTest.cpp $(CHESS_HDR)
 	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
 
+$(CHESS_OBJ)/test/perftTest.o: $(CHESS_TST)/perftTest.c $(CHESS_HDR)
+	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
+
 # ------------------------
 # >>>> BINARY RECIPES <<<<
 # ------------------------
@@ -166,3 +174,6 @@ $(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arrayli
 
 $(CHESS_BIN)/libchess.so: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@
+
+$(CHESS_BIN)/perftTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/perftTest.o
+	$(C) $(CFLAGS) $^ -o $@

@@ -19,6 +19,11 @@ char *_strdup(const char *s) {
 
 board_t *board_make(const char *fen) {
     board_t *ret = (board_t *) calloc(1, sizeof(board_t));
+    if (!ret) {
+        fprintf(stderr, "malloc error in board_make\n");
+        exit(1);
+    }
+
     char *fencpy = _strdup(fen);  // mutability
     char *board_p = strtok(fencpy, " ");  // split off board data
     char *player_p = strtok(NULL, " ");  // split off player data
@@ -198,10 +203,73 @@ int board_is_stalemate(const board_t *board) {
 
     int incheck = _board_hit(board, kingpos / 8, kingpos % 8, FLAGS_BPLAYER(board->flags));
 
-    if (incheck) {  // do the easy stuff first
+    // not stalemate if king is in check (easy)
+    if (incheck) {
         return 0;
     }
 
+    // check for insufficient material (also easy)
+    // 1. get unit counts
+    uint32_t rank;
+    int rk;
+    int offs;
+    int pc;
+    int counts[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    pos_t wbishop_pos;
+    pos_t bbishop_pos;
+    for (rk = 7; rk >= 0; --rk) {  // 8 to 1
+        rank = board->ranks[rk];
+        for (offs = 0; offs < 8; ++offs) {  // a to h
+            pc = rank & 0xf;  // one nibble / pc at a time
+            if (pc == WBISHOP) {
+                wbishop_pos = POS2(offs, rk);
+            }
+            if (pc == BBISHOP) {
+                bbishop_pos = POS2(offs, rk);
+            }
+            ++counts[pc];
+        }
+    }
+
+    // 2a. king versus king
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 0 && counts[WBISHOP] == 0 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 0 && counts[BBISHOP] == 0 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        return 1;
+    }
+
+    // 2b. king and bishop versus king
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 0 && counts[WBISHOP] == 1 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 0 && counts[BBISHOP] == 0 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        return 1;
+    }
+
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 0 && counts[WBISHOP] == 0 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 0 && counts[BBISHOP] == 1 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        return 1;
+    }
+
+    // 2c. king and knight versus king
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 1 && counts[WBISHOP] == 0 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 0 && counts[BBISHOP] == 0 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        return 1;
+    }
+
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 0 && counts[WBISHOP] == 0 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 1 && counts[BBISHOP] == 0 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        return 1;
+    }
+
+    // 2d. king and bishop versus king and bishop with the bishops on the same color
+    if (counts[WPAWN] == 0 && counts[WKNIGHT] == 0 && counts[WBISHOP] == 1 && counts[WROOK] == 0 && counts[WQUEEN] == 0 && counts[WKING] == 1 && \
+        counts[BPAWN] == 0 && counts[BKNIGHT] == 0 && counts[BBISHOP] == 1 && counts[BROOK] == 0 && counts[BQUEEN] == 0 && counts[BKING] == 1) {
+        if (((wbishop_pos / 8) % 2 == (wbishop_pos % 2)) == ((bbishop_pos / 8) % 2 == (bbishop_pos % 2))) {  // bishops on the same color
+            // note that ((pos / 8) % 2 == pos % 2) is True for black squares, False for white squares;
+            // i.e., (parity of rk) equals (parity of file) for black squares, d.n.e. for white squares
+            return 1;
+        }
+    }
+
+    // 3. not in check, sufficient mating material; stalemate if no moves (hard)
     int ret = 0;
     alst_t *moves = board_get_moves(board);
     ret = moves->len == 0;  // not in check and no moves -> stalemate

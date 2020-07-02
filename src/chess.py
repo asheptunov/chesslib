@@ -1,4 +1,5 @@
 import sys, os
+import re
 from ctypes import *
 
 lib = CDLL(os.path.join(os.path.dirname(__file__), "..", "bin", "libchess.so"), RTLD_GLOBAL)
@@ -88,11 +89,16 @@ def move_str(move):
 BOARD_T
 '''
 
+def good_fen(fen):
+  return re.search(r'[rnbqkRNBQK1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkpRNBQKP1-8]+\/[rnbqkRNBQK1-8]+ [wb] (-|K(Q|)(k|)(q|)|(K|)Q(k|)(q|)|(K|)(Q|)k(q|)|(K|)(Q|)(k|)q) (-|[a-h][36])', fen) is not None
+
 # board_t *board_make(const char *fen);
 board_make_lib = lib.board_make
 board_make_lib.argtypes = [c_char_p]
 board_make_lib.restype = POINTER(BOARD)
 def board_make(fen):
+  if not good_fen(fen):
+    raise ValueError('bad fen %s' % fen)
   return board_make_lib(fen.encode('ascii'))
 
 # board_t *board_copy(const board_t *other);

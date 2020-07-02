@@ -1,7 +1,7 @@
 import os
 import ctypes
 
-import chess
+from . import chess
 
 WPAWN = 0
 WKNIGHT = 1
@@ -18,7 +18,6 @@ def evaluate(board):
   for rk in range(0, 8):
     for offs in range(0, 8):
       pc = (board.contents.ranks[rk] >> (offs * 4)) & 0xf
-      # print(pc)
       if (pc / 6) == player:
         ret += pcval(pc)
       else:
@@ -29,7 +28,7 @@ def pcval(pc):
   '''
   returns the approximate value of a piece
   '''
-  pc = pc / 6
+  pc = pc % 6
   if pc == WPAWN:
     return 1
   if pc == WKNIGHT or pc == WBISHOP:
@@ -41,7 +40,7 @@ def pcval(pc):
   return 0
 
 
-def minimax(evaluate, board, depth):
+def minimax(evaluate, board: ctypes.POINTER(chess.BOARD), depth):
   '''
   performs minimax search from the current board position, exploring down to a given depth;
   returns the optimal move from the current position (None if there are no moves, or depth is 0) and the value of the board when applying that move
@@ -78,7 +77,7 @@ def minimax(evaluate, board, depth):
 # use for debugging
 if __name__ == '__main__':
     board = chess.board_make('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -')
-    depth = 5
+    depth = 3
     move, utility = minimax(evaluate, board, depth)
     print(chess.board_to_tui(board))
     print('searched to depth %d' % depth)

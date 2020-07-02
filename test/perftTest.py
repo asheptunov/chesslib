@@ -1,11 +1,12 @@
 import sys
+import time
 import unittest
 from ctypes import *
 
 from src import chess
 from src import perft
 
-thresh = 1_000_000
+thresh = 100_000
 
 class TestPerftMovegenCounts(unittest.TestCase):
   '''
@@ -36,6 +37,24 @@ class TestPerftMovegenCounts(unittest.TestCase):
   
   def test_perft_6(self):
     self.verify_perft_n('r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - -', [1, 46, 2_079, 89_890, 3_894_594, 164_075_551, 6_923_051_137])
+
+# class TestPerftNPS(unittest.TestCase):
+
+#   def test_nps_perft_2_depth_4(self):
+#     board = chess.board_make('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -')
+#     for i in range(10):
+#       # search
+#       start_time = time.time()
+#       move_ct = perft.search(board, 4)
+#       end_time = time.time()
+#       elapsed = end_time - start_time
+
+#       # verify correctness
+#       self.assertEqual(move_ct, 4_085_603)
+
+#       # report resulting nps
+#       print('~%.2f nps' % round(move_ct / elapsed))
+#     chess.board_free(board)
 
 if __name__ == '__main__':
   unittest.main()
