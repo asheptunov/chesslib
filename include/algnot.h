@@ -4,8 +4,8 @@
 #include "move.h"
 
 /**
- * Parses a move from a string and returns extracted move properties. Returns with
- * a code 0 on success, nonzero on failure to parse.
+ * Parses a move from a string and returns the extracted move.
+ * Returns 0 on success, nonzero on parsing failure.
  *
  * @param str the string to parse
  * @param fps frompos

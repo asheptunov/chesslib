@@ -1,22 +1,10 @@
 #include <stdlib.h>
-#include <stdio.h>
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <string.h>
+#include <stdio.h>
 
 #include "board.h"
 #include "parseutils.h"
-
-// // not in c on wsl; implement using malloc
-// // implementation from https://stackoverflow.com/questions/46013382/c-strndup-implicit-declaration
-// char *_strdup(const char *s) {
-//     size_t size = strlen(s) + 1;
-//     char *p = (char *) malloc(size);
-//     if (p == NULL) {
-//         fprintf(stderr, "malloc() error in _strdup\n");
-//         exit(EXIT_FAILURE);
-//     }
-//     memcpy(p, s, size);
-//     return p;
-// }
 
 board_t *board_make(const char *fen) {
     board_t *ret = (board_t *) calloc(1, sizeof(board_t));
@@ -25,23 +13,48 @@ board_t *board_make(const char *fen) {
         exit(EXIT_FAILURE);
     }
 
-    char *fencpy = strdup(fen);  // mutability
-    char *board_p = strtok(fencpy, " ");  // split off board data
-    char *player_p = strtok(NULL, " ");  // split off player data
-    char *castling_p = strtok(NULL, " ");  // split off castling data
-    char *ep_p = strtok(NULL, " ");  // split off en passant data
+    char fencpy[82];  // 8*8 (board) + 7 (slashes) + 3 (spaces) + 1 (player) + 4 (rights) + 2 (ep) + 1 (\0)
+    // char *fencpy = strdup(fen);  // mutability
+#ifdef __STDC_LIB_EXT1__
+    size_t strmax = sizeof fencpy;
+    const char *delim = " ";
+    char *next_token;
+    strcpy_s(fencpy, sizeof fencpy, fen);  // mutability
+    char *board_p = strtok_s(fencpy, &strmax, delim, &next_token);  // split off board data
+    char *player_p = strtok_s(NULL, &strmax, delim, &next_token);  // split off player data
+    char *castling_p = strtok_s(NULL, &strmax, delim, &next_token);  // split off castling data
+    char *ep_p = strtok_s(NULL, &strmax, delim, &next_token);  // split off en passant data
     const char *fenranks[8];
-    fenranks[0] = strtok(board_p, "/");  // split board data by ranks
+    strmax = 72;  // 8*8 (board) + 7 (slashes) + 1 (\0)
+    delim = "/";
+    fenranks[0] = strtok_s(board_p, &strmax, delim, &next_token);  // split board data by ranks
     for (int i = 1; i < 8; ++i) {
-        fenranks[i] = strtok(NULL, "/");
+        fenranks[i] = strtok_s(NULL, &strmax, delim, &next_token);
     }
-
+#else
+    const char *delim = " ";
+    strcpy(fencpy, fen);  // mutability
+    char *board_p = strtok(fencpy, delim);  // split off board data
+    char *player_p = strtok(NULL, delim);  // split off player data
+    char *castling_p = strtok(NULL, delim);  // split off castling data
+    char *ep_p = strtok(NULL, delim);  // split off en passant data
+    const char *fenranks[8];
+    delim = "/";
+    fenranks[0] = strtok(board_p, delim);  // split board data by ranks
+    for (int i = 1; i < 8; ++i) {
+        fenranks[i] = strtok(NULL, delim);
+    }
+#endif
     // build each rank from the fen rank data
     int offs, pc;
     for (int rk = 8; rk > 0; --rk) {
         ret->ranks[rk - 1] = 0xcccccccc;  // init to NOPC
         offs = 0;
+#ifdef __STDC_LIB_EXT1__
+        for (unsigned int i = 0; i < strlen_s(fenranks[8 - rk], 9); ++i) {  // 9 (max) = 8 (rank) + 1 (\0)
+#else
         for (unsigned int i = 0; i < strlen(fenranks[8 - rk]); ++i) {
+#endif
             pc = piece_from_char(fenranks[8 - rk][i]);
 
             // store king position, if a king is in the rank
@@ -70,7 +83,7 @@ board_t *board_make(const char *fen) {
     // set en passant bits and position from fen ep data
     SETEP(strchr(ep_p, '-') ? NOPOS : POS(ep_p[0], ep_p[1] - '0'), ret->flags);
 
-    free(fencpy);
+    // free(fencpy);
     return ret;
 }
 
@@ -297,40 +310,86 @@ char *board_to_fen(const board_t *board) {
                 ++blanks;
             } else {
                 if (blanks) {
+#ifdef __STDC_LIB_EXT1__
+                    sprintf_s(buf, sizeof buf, "%d", blanks);
+                    strcat_s(ret, sizeof ret, buf);
+#else
                     sprintf(buf, "%d", blanks);
                     strcat(ret, buf);
+#endif
                     blanks = 0;
                 }
+#ifdef __STDC_LIB_EXT1__
+                strcat_s(ret, sizeof ret, piece_to_str(pc));
+#else
                 strcat(ret, piece_to_str(pc));
+#endif
             }
             rank >>= 4;  // next file
         }
         // flush any trailing blank sequences
         if (blanks) {
+#ifdef __STDC_LIB_EXT1__
+            sprintf_s(buf, sizeof buf, "%d", blanks);
+            strcat_s(ret, sizeof ret, buf);
+#else
             sprintf(buf, "%d", blanks);
             strcat(ret, buf);
+#endif
         }
         if (rk > 1) {
+#ifdef __STDC_LIB_EXT1__
+            strcat_s(ret, sizeof ret, "/");
+#else
             strcat(ret, "/");
+#endif
         }
     }
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, " ");
+#else
     strcat(ret, " ");
+#endif
     // encode player data
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, FLAGS_WPLAYER(board->flags) ? "w" : "b");
+    strcat_s(ret, sizeof ret, " ");
+#else
     strcat(ret, FLAGS_WPLAYER(board->flags) ? "w" : "b");
     strcat(ret, " ");
+#endif
     // encode castling data
     if (FLAGS_CASTLE(board->flags)) {
+#ifdef __STDC_LIB_EXT1__
+        if (board->flags & WKCASTLE) strcat_s(ret, sizeof ret, "K");
+        if (board->flags & WQCASTLE) strcat_s(ret, sizeof ret, "Q");
+        if (board->flags & BKCASTLE) strcat_s(ret, sizeof ret, "k");
+        if (board->flags & BQCASTLE) strcat_s(ret, sizeof ret, "q");
+#else
         if (board->flags & WKCASTLE) strcat(ret, "K");
         if (board->flags & WQCASTLE) strcat(ret, "Q");
         if (board->flags & BKCASTLE) strcat(ret, "k");
         if (board->flags & BQCASTLE) strcat(ret, "q");
+#endif
     } else {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "-");
+#else
         strcat(ret, "-");
+#endif
     }
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, " ");
+#else
     strcat(ret, " ");
+#endif
     // encode en passant data
     char *eppos = pos_to_str(FLAGS_EP(board->flags));
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, eppos);  // NOPOS auto handled
+#else
     strcat(ret, eppos);  // NOPOS auto handled
+#endif
     // encode turn timer
     // TODO:
     return ret;
@@ -340,24 +399,49 @@ char *board_to_fen(const board_t *board) {
 char *board_to_tui(const board_t *board) {
     static char ret[1024];
     ret[0] = '\0';
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, "    a b c d e f g h\n\n");  // \n is board top/bottom padding
+#else
     strcat(ret, "    a b c d e f g h\n\n");  // \n is board top/bottom padding
+#endif
     uint32_t rank;
     char buf[10];
     for (signed int rk = 8; rk > 0; --rk) {  // encode each rank from the top down
+#ifdef __STDC_LIB_EXT1__
+        sprintf_s(buf, sizeof buf, "%d", rk);
+        strcat_s(ret, sizeof ret, buf);  // rank label (1-8)
+        strcat_s(ret, sizeof ret, "  ");  // board left/right padding
+#else
         sprintf(buf, "%d", rk);
         strcat(ret, buf);  // rank label (1-8)
         strcat(ret, "  ");  // board left/right padding
+#endif
         rank = board->ranks[rk - 1];
         for (int offs = 'a'; offs <= 'h'; ++offs) {
             // encode the pieces at each file in the rank
+#ifdef __STDC_LIB_EXT1__
+            strcat_s(ret, sizeof ret, " ");  // file spacing
+            strcat_s(ret, sizeof ret, piece_to_str(rank & 0xf));
+#else
             strcat(ret, " ");  // file spacing
             strcat(ret, piece_to_str(rank & 0xf));
+#endif
             rank >>= 4;  // next file
         }
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "   ");  // board left/right padding
+        strcat_s(ret, sizeof ret, buf);  // rank label (1-8)
+        strcat_s(ret, sizeof ret, "\n");
+#else
         strcat(ret, "   ");  // board left/right padding
         strcat(ret, buf);  // rank label (1-8)
         strcat(ret, "\n");
+#endif
     }
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, "\n    a b c d e f g h");  // \n
+#else
     strcat(ret, "\n    a b c d e f g h");  // \n
+#endif
     return ret;
 }

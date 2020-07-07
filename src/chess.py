@@ -62,51 +62,41 @@ PYTHON CLASS WRAPPERS
 MOVE
 '''
 
-# move_t *move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t topc, pc_t killpc);
 move_make_lib = lib.move_make
 move_make_lib.argtypes = [c_ubyte, c_ubyte, c_ubyte, c_ubyte, c_ubyte, c_ubyte]
 move_make_lib.restype = POINTER(MOVE)
 
-# move_t *move_make_algnot(const char *algnot);
 move_make_algnot_lib = lib.move_make_algnot
 move_make_algnot_lib.argtypes = [c_char_p]
 move_make_algnot_lib.restype = POINTER(MOVE)
 
-# move_t *move_cpy(move_t *other);
 move_cpy_lib = lib.move_cpy
 move_cpy_lib.argtypes = [POINTER(MOVE)]
 move_cpy_lib.restype = POINTER(MOVE)
 
-# void move_free(move_t *move);
 move_free_lib = lib.move_free
 move_free_lib.argtypes = [POINTER(MOVE)]
 
-# int move_cmp(const move_t *a, const move_t *b);
 move_cmp_lib = lib.move_cmp
 move_cmp_lib.argtypes = [POINTER(MOVE), POINTER(MOVE)]
 move_cmp_lib.restype = c_int
 
-# int move_is_cap(const move_t *move);
 move_is_cap_lib = lib.move_is_cap
 move_is_cap_lib.argtypes = [POINTER(MOVE)]
 move_is_cap_lib.restype = c_int
 
-# int move_is_ep(const move_t *move);
 move_is_ep_lib = lib.move_is_ep
 move_is_ep_lib.argtypes = [POINTER(MOVE)]
 move_is_ep_lib.restype = c_int
 
-# int move_is_promo(const move_t *move);
 move_is_promo_lib = lib.move_is_promo
 move_is_promo_lib.argtypes = [POINTER(MOVE)]
 move_is_promo_lib.restype = c_int
 
-# int move_is_castle(const move_t *move);
 move_is_castle_lib = lib.move_is_castle
 move_is_castle_lib.argtypes = [POINTER(MOVE)]
 move_is_castle_lib.restype = c_int
 
-# char *move_str(const move_t *move);
 move_str_lib = lib.move_str
 move_str_lib.argtypes = [POINTER(MOVE)]
 move_str_lib.restype = c_char_p
@@ -205,50 +195,40 @@ class Move:
 BOARD
 '''
 
-# board_t *board_make(const char *fen);
 board_make_lib = lib.board_make
 board_make_lib.argtypes = [c_char_p]
 board_make_lib.restype = POINTER(BOARD)
 
-# board_t *board_copy(const board_t *other);
 board_copy_lib = lib.board_copy
 board_copy_lib.argtypes = [POINTER(BOARD)]
 board_copy_lib.restype = POINTER(BOARD)
 
-# void board_free(const board_t *other);
 board_free_lib = lib.board_free
 board_free_lib.argtypes = [POINTER(BOARD)]
 
-# void board_apply_move(board_t *board, const move_t *move);
 board_apply_move_lib = lib.board_apply_move
 board_apply_move_lib.argtypes = [POINTER(BOARD), POINTER(MOVE)]
 
-# alst_t board_get_moves(const board_t *board);
 board_get_moves_lib = lib.board_get_moves
 board_get_moves_lib.argtypes = [POINTER(BOARD)]
 board_get_moves_lib.restype = POINTER(ALST)
 
-# int board_is_mate(const board_t *board);
 board_is_mate_lib = lib.board_is_mate
 board_is_mate_lib.argtypes = [POINTER(BOARD)]
 board_is_mate_lib.restype = c_int
 
-# int board_is_stalemate(const board_t *board);
 board_is_stalemate_lib = lib.board_is_stalemate
 board_is_stalemate_lib.argtypes = [POINTER(BOARD)]
 board_is_stalemate_lib.restype = c_int
 
-# char *board_to_fen(const board_t *board);
 board_to_fen_lib = lib.board_to_fen
 board_to_fen_lib.argtypes = [POINTER(BOARD)]
 board_to_fen_lib.restype = c_char_p
 
-# char *board_to_tui(const board_t *board);
 board_to_tui_lib = lib.board_to_tui
 board_to_tui_lib.argtypes = [POINTER(BOARD)]
 board_to_tui_lib.restype = c_char_p
 
-# int _board_hit(const board_t *board, const int rk, const int offs, const int white);
 _board_hit_lib = lib._board_hit
 _board_hit_lib.argtypes = [POINTER(BOARD), c_int, c_int, c_int]
 _board_hit_lib.restype = c_int
@@ -363,26 +343,11 @@ class Board:
 ALST
 '''
 
-# # alst_t *alst_make(size_t cap);
-# alst_make_lib = lib.alst_make
-# alst_make_lib.argtypes = [c_size_t]
-# alst_make_lib.restype = POINTER(ALST)
-
-# void alst_free(alst_t *list);
 alst_free_lib = lib.alst_free
 alst_free_func_type = CFUNCTYPE(None, c_void_p)
 alst_move_free_func = cast(move_free_lib, alst_free_func_type)
 alst_free_lib.argtypes = [POINTER(ALST), alst_free_func_type]
 
-# # void alst_put(alst_t *list, size_t i, void *val);
-# alst_put_lib = lib.alst_put
-# alst_put_lib.argtypes = [POINTER(ALST), c_size_t, c_void_p]
-
-# void *alst_get(alst_t *list, size_t i);
 alst_get_lib = lib.alst_get
 alst_get_lib.argtypes = [POINTER(ALST), c_size_t]
 alst_get_lib.restype = c_void_p
-
-# # void alst_append(alst_t *list, void *val);
-# alst_append = lib.alst_append
-# alst_append.argtypes = [POINTER(ALST), c_void_p]

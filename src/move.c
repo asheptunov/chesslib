@@ -101,33 +101,77 @@ int move_is_castle(const move_t *move) {
 
 char *move_str(const move_t *move) {
     static char ret[16];
-    char *pos_str;
+#ifndef CHESSLIB_PRODUCTION
     switch(move_is_castle(move)) {
         case WKCASTLE:
         case BKCASTLE:
+#ifdef __STDC_LIB_EXT1__
+            strcpy_s(ret, sizeof ret, "0-0");
+#else
             strcpy(ret, "0-0");
+#endif
             return ret;
         case WQCASTLE:
         case BQCASTLE:
+#ifdef __STDC_LIB_EXT1__
+            strcpy_s(ret, sizeof ret, "0-0-0");
+#else
             strcpy(ret, "0-0-0");
+#endif
             return ret;
     }
-
+# else  // ifdef CHESSLIB_PRODUCTION
+# endif  // ifndef CHESSLIB_PRODUCTION
+    char *pos_str;
     ret[0] = '\0';
-    // strcat(ret, piece_to_str(move->frompc));
+#ifdef CHESSLIB_PRODUCTION
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, piece_to_str(move->frompc));
+#else
+    strcat(ret, piece_to_str(move->frompc));
+#endif
+#else  // ifndef CHESSLIB_PRODUCTION
+#endif  // ifdef CHESSLIB_PRODUCTION
     pos_str = pos_to_str(move->frompos);
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, pos_str);
+#else
     strcat(ret, pos_str);
+#endif
     if (move_is_cap(move)) {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "x");
+#else
         strcat(ret, "x");
+#endif
     }
-    // strcat(ret, piece_to_str(move->killpc));
+#ifdef CHESSLIB_PRODUCTION
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, piece_to_str(move->killpc));
+#else
+    strcat(ret, piece_to_str(move->killpc));
+#endif
+#else  // ifndef CHESSLIB_PRODUCTION
+#endif  // ifdef CHESSLIB_PRODUCTION
     pos_str = pos_to_str(move->topos);
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, pos_str);
+#else
     strcat(ret, pos_str);
+#endif
     if (move_is_ep(move)) {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "e.p.");
+#else
         strcat(ret, "e.p.");
+#endif
     }
     if (move_is_promo(move)) {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, piece_to_str(move->topc));
+#else
         strcat(ret, piece_to_str(move->topc));
+#endif
     }
     return ret;
 }

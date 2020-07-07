@@ -18,7 +18,11 @@ pos_t pos_from_str(const char *label) {
 char *pos_to_str(const pos_t pos) {
     static char ret[3];
     if (pos == NOPOS) {
+#ifdef __STDC_LIB_EXT1__
+        strcpy_s(ret, sizeof ret, "-");
+#else
         strcpy(ret, "-");
+#endif
         return ret;
     }
     ret[0] = (pos % 8) + 'a';
