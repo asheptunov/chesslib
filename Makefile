@@ -14,7 +14,9 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
 # ------------------------
 
 C = gcc
-CFLAGS = -g -Wall -Wextra -std=c11 -D_XOPEN_SOURCE=700 -fPIC -O3  # -DCHESSLIB_PRODUCTION
+CFLAGS = -g -Wall -Wextra -std=c11 -D_XOPEN_SOURCE=700 -fPIC
+CPROD = -O3 -DCHESSLIB_PROD
+CTEST = -g -O1
 
 CXX = g++
 CPPFLAGS = -isystem $(GTEST_HDR)
@@ -76,7 +78,7 @@ all: libso unittest systemtest
 .PHONY: clean
 
 clean:
-	find bin   -type f -name '*.a' -delete -o -name '*.so' -delete -o -name '*Test' -delete ; \
+	find bin   -type f -name '*.a' -delete -o -name '*.so' -delete -o -name '*.dll' -delete -o -name '*Test' -delete ; \
 	find build -type f -name '*.c' -delete -o -name '*.o' -delete
 
 init:
@@ -90,7 +92,7 @@ init:
 	@mkdir bin
 	@mkdir lib
 	@mkdir lib/googletest $(GTEST_HDR) $(GTEST_LIB)
-	@mkdir build build/src build/test
+	@mkdir build build/src build/src/prod build/src/test build/test
 	@mkdir log
 	@echo "fetching dependencies..."
 	@ROOTDIR=$(pwd)
@@ -104,7 +106,9 @@ init:
 # >>>> C RECIPES <<<<
 # -------------------
 
-build/src/algnot.c: src/algnot.flex
+build/src/prod/algnot.c: src/algnot.flex
+	$(LEX) $(LEXFLAGS) -o $@ $<
+build/src/test/algnot.c: src/algnot.flex
 	$(LEX) $(LEXFLAGS) -o $@ $<
 
 # ------------------------
@@ -119,23 +123,35 @@ test/memTest.py: $(LIBSO) $(UNIT_TESTS) $(SYSTEM_TESTS)
 # >>>> OBJECT RECIPES <<<<
 # ------------------------
 
-build/src/algnot.o: build/src/algnot.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/algnot.o: build/src/prod/algnot.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/algnot.o: build/src/test/algnot.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
-build/src/parseutils.o: src/parseutils.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/parseutils.o: src/parseutils.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/parseutils.o: src/parseutils.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
-build/src/move.o: src/move.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/move.o: src/move.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/move.o: src/move.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
-build/src/board.o: src/board.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/board.o: src/board.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/board.o: src/board.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
-build/src/arraylist.o: src/arraylist.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/arraylist.o: src/arraylist.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/arraylist.o: src/arraylist.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
-build/src/movegen.o: src/movegen.c include
-	$(C) $(CFLAGS) -I include -c -o $@ $<
+build/src/prod/movegen.o: src/movegen.c include
+	$(C) $(CFLAGS) $(CPROD) -I include -c -o $@ $<
+build/src/test/movegen.o: src/movegen.c include
+	$(C) $(CFLAGS) $(CTEST) -I include -c -o $@ $<
 
 build/test/boardTest.o: test/boardTest.cpp include
 	$(CXX) $(CXXFLAGS) -I include -I $(GTEST_HDR) -c -o $@ $<
@@ -156,26 +172,26 @@ build/test/perftTest.o: test/perftTest.cpp include
 # >>>> BINARY RECIPES <<<<
 # ------------------------
 
-bin/moveTest: build/src/parseutils.o build/src/move.o build/src/algnot.o build/test/moveTest.o $(GTEST_LIBS)
+bin/moveTest: build/src/test/parseutils.o build/src/test/move.o build/src/test/algnot.o build/test/moveTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/boardTest: build/src/parseutils.o build/src/arraylist.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o build/test/boardTest.o $(GTEST_LIBS)
+bin/boardTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/boardTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/arraylistTest: build/src/arraylist.o build/test/arraylistTest.o $(GTEST_LIBS)
+bin/arraylistTest: build/src/test/arraylist.o build/test/arraylistTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/movegenTest: build/src/parseutils.o build/src/arraylist.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o build/test/movegenTest.o $(GTEST_LIBS)
+bin/movegenTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/perftTest: build/src/parseutils.o build/src/arraylist.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o build/test/perftTest.o $(GTEST_LIBS)
+bin/perftTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/perftTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/libchess.a: build/src/parseutils.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o
+bin/libchess.a: build/src/prod/parseutils.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(AR) $(ARFLAGS) $@ $^
 
-bin/libchess.so: build/src/parseutils.o build/src/arraylist.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o
+bin/libchess.so: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@
 
-bin/libchess.dll: build/src/parseutils.o build/src/arraylist.o build/src/move.o build/src/algnot.o build/src/board.o build/src/movegen.o
+bin/libchess.dll: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@

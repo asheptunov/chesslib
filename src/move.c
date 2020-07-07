@@ -101,7 +101,7 @@ int move_is_castle(const move_t *move) {
 
 char *move_str(const move_t *move) {
     static char ret[16];
-#ifndef CHESSLIB_PRODUCTION
+#ifndef CHESSLIB_PROD
     switch(move_is_castle(move)) {
         case WKCASTLE:
         case BKCASTLE:
@@ -120,18 +120,18 @@ char *move_str(const move_t *move) {
 #endif
             return ret;
     }
-# else  // ifdef CHESSLIB_PRODUCTION
-# endif  // ifndef CHESSLIB_PRODUCTION
+# else  // ifdef CHESSLIB_PROD
+# endif  // ifndef CHESSLIB_PROD
     char *pos_str;
     ret[0] = '\0';
-#ifdef CHESSLIB_PRODUCTION
+#ifdef CHESSLIB_PROD
 #ifdef __STDC_LIB_EXT1__
     strcat_s(ret, sizeof ret, piece_to_str(move->frompc));
 #else
     strcat(ret, piece_to_str(move->frompc));
 #endif
-#else  // ifndef CHESSLIB_PRODUCTION
-#endif  // ifdef CHESSLIB_PRODUCTION
+#else  // ifndef CHESSLIB_PROD
+#endif  // ifdef CHESSLIB_PROD
     pos_str = pos_to_str(move->frompos);
 #ifdef __STDC_LIB_EXT1__
     strcat_s(ret, sizeof ret, pos_str);
@@ -145,14 +145,14 @@ char *move_str(const move_t *move) {
         strcat(ret, "x");
 #endif
     }
-#ifdef CHESSLIB_PRODUCTION
+#ifdef CHESSLIB_PROD
 #ifdef __STDC_LIB_EXT1__
     strcat_s(ret, sizeof ret, piece_to_str(move->killpc));
 #else
     strcat(ret, piece_to_str(move->killpc));
 #endif
-#else  // ifndef CHESSLIB_PRODUCTION
-#endif  // ifdef CHESSLIB_PRODUCTION
+#else  // ifndef CHESSLIB_PROD
+#endif  // ifdef CHESSLIB_PROD
     pos_str = pos_to_str(move->topos);
 #ifdef __STDC_LIB_EXT1__
     strcat_s(ret, sizeof ret, pos_str);

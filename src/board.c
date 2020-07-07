@@ -229,8 +229,8 @@ int board_is_stalemate(const board_t *board) {
     int offs;
     int pc;
     int counts[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    pos_t wbishop_pos;
-    pos_t bbishop_pos;
+    pos_t wbishop_pos = NOPOS;
+    pos_t bbishop_pos = NOPOS;
     for (rk = 7; rk >= 0; --rk) {  // 8 to 1
         rank = board->ranks[rk];
         for (offs = 0; offs < 8; ++offs) {  // a to h
