@@ -1,5 +1,4 @@
-#ifndef ALGNOT_H
-#define ALGNOT_H
+#pragma once
 
 #include "defs.h"
 #include "move.h"
@@ -18,5 +17,3 @@
  * @return 0 on success; nonzero on failure.
  */
 int algnot_parse(const char *str, move_t *move);
-
-#endif  // ALGNOT_H

@@ -40,7 +40,7 @@ LEXFLAGS = --align --fast # --verbose --debug
 # >>>> PYTHON PROPERTIES <<<<
 # ---------------------------
 PY = python3
-PYFLAGS = -m
+PYTEST_FLAGS = -m unittest -v
 
 # --------------------------
 # >>>> GTEST PROPERTIES <<<<
@@ -55,13 +55,13 @@ UNIT_TESTS =$(CHESS_BIN)/moveTest        \
 			$(CHESS_BIN)/arraylistTest   \
 			$(CHESS_BIN)/movegenTest
 
-PERFT_TEST = $(CHESS_BIN)/perftTest
+SYSTEM_TESTS =  $(CHESS_BIN)/perftTest \
+				$(CHESS_TST)/perftTest.py \
+				$(CHESS_TST)/memTest.py
 
-SYSTEM_TESTS = $(CHESS_TST)/perftTest.py
-
-MEM_TESTS = $(CHESS_TST)/memTest.py
-
-LIBS = $(CHESS_BIN)/libchess.so
+LIBA =  $(CHESS_BIN)/libchess.a
+LIBSO = $(CHESS_BIN)/libchess.so
+LIBDLL = $(CHESS_BIN)/libchess.dll
 
 init:
 	@echo "making directories"
@@ -70,7 +70,7 @@ init:
 	@if [ -d "$(CHESS_OBJ)" ]; then rm -Rf $(CHESS_OBJ); fi
 	@if [ -d "googletest" ]; then rm -Rf googletest; fi
 	@if [ -d "log" ]; then rm -Rf log; fi
-	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; mkdir log ; mkdir data
+	@make clean ; mkdir $(CHESS_BIN) ; mkdir $(CHESS_LIB) $(GTEST_ROOT) $(GTEST_HDR) $(GTEST_LIB) ; mkdir $(CHESS_OBJ) $(CHESS_OBJ)/src $(CHESS_OBJ)/test ; mkdir log
 	@echo "fetching dependencies"
 	@ROOTDIR=$(pwd)
 	@git clone https://github.com/google/googletest.git
@@ -85,24 +85,23 @@ unittest: $(UNIT_TESTS)
 	@echo `echo $^ | sed -r 's/\s/ $(GTEST_FLAGS) ; /g'` $(GTEST_FLAGS) | sh
 
 systemtest: $(SYSTEM_TESTS)
-	@$(PY) $(PYFLAGS) test.perftTest -v
+	$(CHESS_BIN)/perftTest ; $(PY) $(PYTEST_FLAGS) test.perftTest test.memTest
 
-memtest: $(MEM_TESTS)
-	@$(PY) $(PYFLAGS) test.memTest -v
+test: unittest systemtest
 
-perfttest: $(PERFT_TEST)
-	$^
+liba: $(LIBA)
 
-test: unittest systemtest memtest
+libso: $(LIBSO)
 
-lib: $(LIBS)
+libdll: $(LIBDLL)
 
-all: $(LIBS) $(UNIT_TESTS) $(SYSTEM_TESTS) $(MEM_TESTS)
+all: $(LIBSO) $(UNIT_TESTS) $(SYSTEM_TESTS)
 
 .PHONY: clean
 
 clean:
-	rm -f bin/* $(CHESS_OBJ)/src/*.o $(CHESS_OBJ)/src/*.c $(CHESS_OBJ)/test/*.o $(CHESS_OBJ)/src/*.a $(CHESS_OBJ)/src/*.so log/*
+	find $(CHESS_BIN) -type f -name '*.a' -delete -o -name '*.so' -delete -o -name '*Test' -delete ; \
+	find $(CHESS_OBJ) -type f -name '*.c' -delete -o -name '*.o' -delete
 
 # -------------------
 # >>>> C RECIPES <<<<
@@ -114,9 +113,9 @@ $(CHESS_OBJ)/src/algnot.c: $(CHESS_SRC)/algnot.flex
 # >>>> PYTHON RECIPES <<<<
 # ------------------------
 
-$(CHESS_TST)/perftTest.py: $(LIBS)
+$(CHESS_TST)/perftTest.py: $(LIBSO)
 
-$(CHESS_TST)/memTest.py: $(LIBS) $(UNIT_TESTS) $(PERFT_TEST)
+$(CHESS_TST)/memTest.py: $(LIBSO) $(UNIT_TESTS) $(SYSTEM_TESTS)
 
 # ------------------------
 # >>>> OBJECT RECIPES <<<<
@@ -151,8 +150,8 @@ $(CHESS_OBJ)/test/arraylistTest.o: $(CHESS_TST)/arraylistTest.cpp $(CHESS_HDR)
 $(CHESS_OBJ)/test/movegenTest.o: $(CHESS_TST)/movegenTest.cpp $(CHESS_HDR)
 	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
 
-$(CHESS_OBJ)/test/perftTest.o: $(CHESS_TST)/perftTest.c $(CHESS_HDR)
-	$(C) $(CFLAGS) -I $(CHESS_HDR) -c -o $@ $<
+$(CHESS_OBJ)/test/perftTest.o: $(CHESS_TST)/perftTest.cpp $(CHESS_HDR)
+	$(CXX) $(CXXFLAGS) -I $(CHESS_HDR) -I $(GTEST_HDR) -c -o $@ $<
 
 # ------------------------
 # >>>> BINARY RECIPES <<<<
@@ -169,11 +168,14 @@ $(CHESS_BIN)/arraylistTest: $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/test/array
 $(CHESS_BIN)/movegenTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-# $(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
-# 	$(AR) $(ARFLAGS) $@ $^
+$(CHESS_BIN)/perftTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/perftTest.o $(GTEST_LIBS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
+
+$(CHESS_BIN)/libchess.a: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+	$(AR) $(ARFLAGS) $@ $^
 
 $(CHESS_BIN)/libchess.so: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@
 
-$(CHESS_BIN)/perftTest: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o $(CHESS_OBJ)/test/perftTest.o
-	$(C) $(CFLAGS) $^ -o $@
+$(CHESS_BIN)/libchess.dll: $(CHESS_OBJ)/src/parseutils.o $(CHESS_OBJ)/src/arraylist.o $(CHESS_OBJ)/src/move.o $(CHESS_OBJ)/src/algnot.o $(CHESS_OBJ)/src/board.o $(CHESS_OBJ)/src/movegen.o
+	$(C) $(CFLAGS) $^ -shared -o $@

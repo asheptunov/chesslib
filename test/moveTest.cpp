@@ -47,6 +47,8 @@ TEST(MoveTest, ValConstruct) {
 }
 
 TEST(MoveTest, AlgNotConstruct) {
+    char str1[16];
+    char str2[16];
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
         move_t *m1 = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         move_t *m2 = move_make_algnot(it->second[1].c_str());
@@ -60,11 +62,9 @@ TEST(MoveTest, AlgNotConstruct) {
         EXPECT_EQ(move_is_ep(m1), move_is_ep(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_promo(m1), move_is_promo(m2)) << "diff at " << it->second[0];
         EXPECT_EQ(move_is_castle(m1), move_is_castle(m2)) << "diff at " << it->second[0];
-        char *str1 = move_str(m1);
-        char *str2 = move_str(m2);
+        strcpy(str1, move_str(m1));
+        strcpy(str2, move_str(m2));
         EXPECT_EQ(strcmp(str1, str2), 0) << "diff at " << it->second[0];
-        free(str1);
-        free(str2);
         move_free(m1);
         move_free(m2);
     }
@@ -107,7 +107,6 @@ TEST(MoveTest, Print) {
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         char *str = move_str(m);
         EXPECT_EQ(strcmp(str, it->second[0].c_str()), 0) << "diff at " << it->second[0];
-        free(str);
         move_free(m);
     }
 }

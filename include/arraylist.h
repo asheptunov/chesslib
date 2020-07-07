@@ -1,5 +1,4 @@
-#ifndef ARRAYLIST_H
-#define ARRAYLIST_H
+#pragma once
 
 #include "stdlib.h"
 
@@ -24,5 +23,3 @@ void *alst_get(alst_t *list, size_t i);
 
 // appends the value val at the end of the arraylist list
 void alst_append(alst_t *list, void *val);
-
-#endif  // ARRAYLIST_H

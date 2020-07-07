@@ -1,5 +1,4 @@
-#ifndef BOARD_H
-#define BOARD_H
+#pragma once
 
 #include "defs.h"
 #include "move.h"
@@ -87,5 +86,3 @@ char *board_to_tui(const board_t *board);
      * @return true if the position is hit, false otherwise
      */
 int _board_hit(const board_t *board, const int rk, const int offs, const int white);
-
-#endif  // BOARD_H

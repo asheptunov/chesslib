@@ -1,5 +1,4 @@
-#ifndef MOVE_H
-#define MOVE_H
+#pragma once
 
 #include "defs.h"
 
@@ -20,8 +19,6 @@ move_t *move_cpy(move_t *other);
 
 void move_free(move_t *move);
 
-// int move_equal(const move_t *a, const move_t *b);
-
 int move_cmp(const move_t *a, const move_t *b);
 
 int move_is_cap(const move_t *move);
@@ -33,5 +30,3 @@ int move_is_promo(const move_t *move);
 int move_is_castle(const move_t *move);
 
 char *move_str(const move_t *move);
-
-#endif  // MOVE_H

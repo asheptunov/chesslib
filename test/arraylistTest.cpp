@@ -2,9 +2,9 @@ extern "C" {
 #include "arraylist.h"
 }
 
-#include <gtest/gtest.h>
 #include <cstdlib>
 #include <iostream>
+#include <gtest/gtest.h>
 
 TEST(ArrayListTest, Make) {
   // make using default settings
@@ -46,7 +46,7 @@ TEST(ArrayListTest, FreeFunc) {
   int *e = (int *) malloc(sizeof(int));
   if (!e) {
     std::cerr << "malloc error in ArrayListTest.FreeFunc" << std::endl;
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   alst_append(list, e);
 

@@ -14,22 +14,12 @@ pos_t pos_from_str(const char *label) {
     return POS(label[0], label[1] - '0');
 }
 
-// caller responsible for freeing returned buffer
+// returned buffer is static
 char *pos_to_str(const pos_t pos) {
-    char *ret;
+    static char ret[3];
     if (pos == NOPOS) {
-        ret = (char *) malloc(2 * sizeof(char));
-        if (!ret) {
-            fprintf(stderr, "malloc error in pos_to_str (NOPOS)\n");
-            exit(1);
-        }
-        memcpy(ret, "-", 2);
+        strcpy(ret, "-");
         return ret;
-    }
-    ret = (char *) malloc(3 * sizeof(char));
-    if (!ret) {
-        fprintf(stderr, "malloc error in pos_to_str (not NOPOS)\n");
-        exit(1);
     }
     ret[0] = (pos % 8) + 'a';
     ret[1] = (pos / 8) + '1';
@@ -47,6 +37,7 @@ pc_t piece_from_char(const char label) {
     return NOPC;
 }
 
+// returned buffer is static
 const char *piece_to_str(const pc_t piece) {
     if (piece <= BKING) {
         return _piece_str_map[piece];

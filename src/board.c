@@ -1,30 +1,31 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "board.h"
 #include "parseutils.h"
 
-// not in c on wsl; implement using malloc
-// implementation from https://stackoverflow.com/questions/46013382/c-strndup-implicit-declaration
-char *_strdup(const char *s) {
-    size_t size = strlen(s) + 1;
-    char *p = (char *) malloc(size);
-    if (p == NULL) {
-        fprintf(stderr, "malloc() error in _strdup\n");
-        exit(1);
-    }
-    memcpy(p, s, size);
-    return p;
-}
+// // not in c on wsl; implement using malloc
+// // implementation from https://stackoverflow.com/questions/46013382/c-strndup-implicit-declaration
+// char *_strdup(const char *s) {
+//     size_t size = strlen(s) + 1;
+//     char *p = (char *) malloc(size);
+//     if (p == NULL) {
+//         fprintf(stderr, "malloc() error in _strdup\n");
+//         exit(EXIT_FAILURE);
+//     }
+//     memcpy(p, s, size);
+//     return p;
+// }
 
 board_t *board_make(const char *fen) {
     board_t *ret = (board_t *) calloc(1, sizeof(board_t));
     if (!ret) {
         fprintf(stderr, "malloc error in board_make\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    char *fencpy = _strdup(fen);  // mutability
+    char *fencpy = strdup(fen);  // mutability
     char *board_p = strtok(fencpy, " ");  // split off board data
     char *player_p = strtok(NULL, " ");  // split off player data
     char *castling_p = strtok(NULL, " ");  // split off castling data
@@ -77,7 +78,7 @@ board_t *board_copy(const board_t *other) {
     board_t *ret = (board_t *) malloc(sizeof(board_t));
     if (!ret) {
         fprintf(stderr, "malloc error in board_copy\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     memcpy(&ret->ranks, &other->ranks, sizeof(int32_t) * 8);  // copy ranks
     ret->flags = other->flags;  // copy flags
@@ -277,14 +278,10 @@ int board_is_stalemate(const board_t *board) {
     return ret;
 }
 
-// caller responsible for freeing returned buffer
+// returned buffer is static
 char *board_to_fen(const board_t *board) {
     // make output buffer
-    char *ret = (char *) malloc(100 * sizeof(char));
-    if (!ret) {
-        fprintf(stderr, "malloc error in board_to_fen\n");
-        exit(1);
-    }
+    static char ret[100];
     ret[0] = '\0';
     // encode rank data
     int blanks;
@@ -334,19 +331,14 @@ char *board_to_fen(const board_t *board) {
     // encode en passant data
     char *eppos = pos_to_str(FLAGS_EP(board->flags));
     strcat(ret, eppos);  // NOPOS auto handled
-    free(eppos);
     // encode turn timer
     // TODO:
     return ret;
 }
 
-// caller responsible for freeing returned buffer
+// returned buffer is static
 char *board_to_tui(const board_t *board) {
-    char *ret = (char *) malloc(1024 * sizeof(char));
-    if (!ret) {
-        fprintf(stderr, "malloc error in board_to_tui\n");
-        exit(1);
-    }
+    static char ret[1024];
     ret[0] = '\0';
     strcat(ret, "    a b c d e f g h\n\n");  // \n is board top/bottom padding
     uint32_t rank;

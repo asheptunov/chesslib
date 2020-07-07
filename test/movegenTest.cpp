@@ -71,7 +71,6 @@ string printMoveVec(const vector<move_t *> &moves) {
       ret += " ";
       str = move_str(mv);
       ret += str;
-      free(str);
    }
    return ret;
 }
@@ -114,13 +113,13 @@ TEST(BoardMoveGenTest, MoveList) {
 
       move_t *m1;
       move_t *m2;
-      char *ms1;
-      char *ms2;
+      char ms1[16];
+      char ms2[16];
       for (size_t i = 0; i < actual.size(); ++i) {
          m1 = actual[i];
          m2 = expect[i];
-         ms1 = move_str(m1);
-         ms2 = move_str(m2);
+         strcpy(ms1, move_str(m1));
+         strcpy(ms2, move_str(m2));
          EXPECT_EQ(strcmp(ms1, ms2), 0) << "Move diff; got " << ms1 << " but expected " << ms2;
          EXPECT_EQ(m1->frompos, m2->frompos);
          EXPECT_EQ(m1->frompc, m2->frompc);
@@ -129,8 +128,6 @@ TEST(BoardMoveGenTest, MoveList) {
          EXPECT_EQ(m1->killpos, m2->killpos);
          EXPECT_EQ(m1->killpc, m2->killpc);
          free(expect[i]);
-         free(ms1);
-         free(ms2);
       }
 
       alst_free(actual_, (void (*) (void *)) move_free);
@@ -161,7 +158,6 @@ TEST(BoardMoveGenTest, HitCheck) {
          char *fen = board_to_fen(b);
          EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, true), expect[0]) << "diff for white hits on pos " << std::to_string(pos) << " for fen " << fen;
          EXPECT_EQ(_board_hit(b, pos / 8, pos % 8, false), expect[1]) << "diff for black hits on pos " << std::to_string(pos) << " for fen " << fen;
-         free(fen);
       }
 
       board_free(b);

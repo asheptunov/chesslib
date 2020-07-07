@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -9,7 +10,7 @@ move_t *move_make(pos_t frompos, pos_t topos, pos_t killpos, pc_t frompc, pc_t t
     move_t *move = (move_t *) malloc(sizeof(move_t));
     if (!move) {
         fprintf(stderr, "malloc error in move_make\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     move->frompos = frompos;
     move->topos = topos;
@@ -25,11 +26,11 @@ move_t *move_make_algnot(const char *algnot) {
     move_t *ret = (move_t *) malloc(sizeof(move_t));
     if (!ret) {
         fprintf(stderr, "malloc error in move_make_algnot\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     if (algnot_parse(algnot, ret)) {
         fprintf(stderr, "move_make_algnot failure to parse string %s", algnot);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     return ret;
 }
@@ -38,7 +39,7 @@ move_t *move_cpy(move_t *other) {
     move_t *cpy = (move_t *) malloc(sizeof(move_t));
     if (!cpy) {
         fprintf(stderr, "malloc error in move_cpy\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     memcpy(cpy, other, sizeof(move_t));
     return cpy;
@@ -99,53 +100,34 @@ int move_is_castle(const move_t *move) {
 }
 
 char *move_str(const move_t *move) {
-    char *ret;
+    static char ret[16];
     char *pos_str;
     switch(move_is_castle(move)) {
         case WKCASTLE:
         case BKCASTLE:
-            ret = (char *) malloc(4 * sizeof(char));
-            if (!ret) {
-                fprintf(stderr, "malloc error in move_str (WKCASTLE/BKCASTLE)\n");
-                exit(1);
-            }
-            memcpy(ret, "0-0", 4);
+            strcpy(ret, "0-0");
             return ret;
         case WQCASTLE:
         case BQCASTLE:
-            ret = (char *) malloc(6 * sizeof(char));
-            if (!ret) {
-                fprintf(stderr, "malloc error in move_str (WQCASTLE/BKCASTLE)\n");
-                exit(1);
-            }
-            memcpy(ret, "0-0-0", 6);
+            strcpy(ret, "0-0-0");
             return ret;
     }
 
-    ret = (char *) malloc(16 * sizeof(char));
-    if (!ret) {
-        fprintf(stderr, "malloc error in move_str (not castling)\n");
-        exit(1);
-    }
     ret[0] = '\0';
     // strcat(ret, piece_to_str(move->frompc));
     pos_str = pos_to_str(move->frompos);
     strcat(ret, pos_str);
-    free(pos_str);
     if (move_is_cap(move)) {
         strcat(ret, "x");
     }
     // strcat(ret, piece_to_str(move->killpc));
     pos_str = pos_to_str(move->topos);
     strcat(ret, pos_str);
-    free(pos_str);
     if (move_is_ep(move)) {
         strcat(ret, "e.p.");
     }
     if (move_is_promo(move)) {
-        // char *piece_str = piece_to_str(move->topc);
         strcat(ret, piece_to_str(move->topc));
-        // free(piece_str);
     }
     return ret;
 }

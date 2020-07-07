@@ -1,5 +1,4 @@
-#ifndef DEFS_H
-#define DEFS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -109,5 +108,3 @@ typedef uint8_t pc_t;
 #define ISPOS2(rk, offs) (((rk) >= 0 && (rk) < 8) && ((offs) >= 0 && (offs) < 8))
 
 #define STARTING_BOARD "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"
-
-#endif  // DEFS_H
