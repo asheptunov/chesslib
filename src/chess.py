@@ -15,6 +15,9 @@ lib = WinDLL(config['libchess']['nt_path'], RTLD_GLOBAL) if os.name == 'nt' else
 UTIL
 '''
 
+NOPOS = 64
+NOPC = 12
+
 STARTING_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -'
 _FEN_RK_1_8 = r'[rnbqkRNBQK1-8]+'
 _FEN_RK_2_7 = r'[rnbqkpRNBQKP1-8]+'
@@ -27,32 +30,19 @@ def _good_fen(fen):
   return re.search(_FEN_RGX, fen) is not None
 
 '''
-STRUCT DEFINITIONS
+TYPE DEFINITIONS
 '''
 
 class BOARD(Structure):
   _fields_ = [("ranks", c_uint*8),
               ("flags", c_uint)]
-
-BOARD_T = BOARD
 BOARD_PTR_T = POINTER(BOARD)
-
-class MOVE(Structure):
-  _fields_ = [("frompos", c_ubyte),
-              ("topos", c_ubyte),
-              ("killpos", c_ubyte),
-              ("frompc", c_ubyte),
-              ("topc", c_ubyte),
-              ("killpc", c_ubyte)]
-
-MOVE_T = MOVE
-MOVE_PTR_T = POINTER(MOVE_T)
 
 class ALST(Structure):
   _fields_ = [("len", c_size_t), ("cap", c_size_t), ("data", POINTER(c_void_p))]
+ALST_PTR_T = POINTER(ALST)
 
-ALST_T = ALST
-ALST_PTR_T = POINTER(ALST_T)
+MOVE_T = c_ulonglong
 
 '''
 PYTHON CLASS WRAPPERS
@@ -64,69 +54,55 @@ MOVE
 
 move_make_lib = lib.move_make
 move_make_lib.argtypes = [c_ubyte, c_ubyte, c_ubyte, c_ubyte, c_ubyte, c_ubyte]
-move_make_lib.restype = POINTER(MOVE)
+move_make_lib.restype = MOVE_T
 
 move_make_algnot_lib = lib.move_make_algnot
 move_make_algnot_lib.argtypes = [c_char_p]
-move_make_algnot_lib.restype = POINTER(MOVE)
-
-move_cpy_lib = lib.move_cpy
-move_cpy_lib.argtypes = [POINTER(MOVE)]
-move_cpy_lib.restype = POINTER(MOVE)
-
-move_free_lib = lib.move_free
-move_free_lib.argtypes = [POINTER(MOVE)]
+move_make_algnot_lib.restype = MOVE_T
 
 move_cmp_lib = lib.move_cmp
-move_cmp_lib.argtypes = [POINTER(MOVE), POINTER(MOVE)]
+move_cmp_lib.argtypes = [MOVE_T, MOVE_T]
 move_cmp_lib.restype = c_int
 
 move_is_cap_lib = lib.move_is_cap
-move_is_cap_lib.argtypes = [POINTER(MOVE)]
+move_is_cap_lib.argtypes = [MOVE_T]
 move_is_cap_lib.restype = c_int
 
 move_is_ep_lib = lib.move_is_ep
-move_is_ep_lib.argtypes = [POINTER(MOVE)]
+move_is_ep_lib.argtypes = [MOVE_T]
 move_is_ep_lib.restype = c_int
 
 move_is_promo_lib = lib.move_is_promo
-move_is_promo_lib.argtypes = [POINTER(MOVE)]
+move_is_promo_lib.argtypes = [MOVE_T]
 move_is_promo_lib.restype = c_int
 
 move_is_castle_lib = lib.move_is_castle
-move_is_castle_lib.argtypes = [POINTER(MOVE)]
+move_is_castle_lib.argtypes = [MOVE_T]
 move_is_castle_lib.restype = c_int
 
 move_str_lib = lib.move_str
-move_str_lib.argtypes = [POINTER(MOVE)]
+move_str_lib.argtypes = [MOVE_T]
 move_str_lib.restype = c_char_p
 
 class Move:
   def __init__(self, move):
     if isinstance(move, Move):
       self._move = move._move
-    elif isinstance(move, MOVE_PTR_T):
-      self._move = move
     elif isinstance(move, MOVE_T):
-      self._move = pointer(move)
+      self._move = move
     else:
       raise TypeError('not a move %s' % move)
 
   def __cmp__(self, other):
     if isinstance(other, Move):
       return move_cmp_lib(self._move, other._move)
-    elif isinstance(other, MOVE_PTR_TYPE):
-      return move_cmp_lib(self._move, other)
     elif isinstance(other, MOVE_T):
-      return move_cmp_lib(self._move, pointer(other))
+      return move_cmp_lib(self._move, other)
     else:
       raise TypeError('not a move %s' % other)
 
   def __str__(self):
     return move_str_lib(self._move).decode('ascii')
-
-  def __del__(self):
-    move_free_lib(self._move)
 
   @classmethod
   def from_values(cls, frompos, topos, killpos, frompc, topc, killpc):
@@ -154,10 +130,8 @@ class Move:
     '''
     if isinstance(move, Move):
       return cls(move_cpy_lib(move._move))
-    elif isinstance(move, MOVE_PTR_T):
-      return cls(move_cpy_lib(move))
     elif isinstance(move, MOVE_T):
-      return cls(move_cpy_lib(pointer(move)))
+      return cls(move_cpy_lib(move))
     else:
       raise TypeError('not a move %s' % move)
 
@@ -185,11 +159,44 @@ class Move:
     '''
     return move_is_castle_lib(self._move)
 
-  def move(self):
+  def frompos(self):
     '''
-    Returns the underlying move_t* pointer.
+    Returns the move's starting square
     '''
-    return self._move
+    return self._move & 0xff
+
+  def topos(self):
+    '''
+    Returns the move's ending square
+    '''
+    return (self._move >> 8) & 0xff
+
+  def killpos(self):
+    '''
+    Returns the move's victim piece's square, if the move was a capture.
+    Returns NOPOS otherwise.
+    '''
+    return (self._move >> 16) & 0xff
+
+  def frompc(self):
+    '''
+    Returns the piece that made the move.
+    '''
+    return (self._move >> 24) & 0xff
+
+  def topc(self):
+    '''
+    Returns the piece that the frompc became by the end of the move, if the move was a promotion.
+    Returns frompc otherwise.
+    '''
+    return (self._move >> 32) & 0xff
+
+  def killpc(self):
+    '''
+    Returns the move's victim's piece, if the move was a capture.
+    Returns NOPC otherwise.
+    '''
+    return (self._move >> 40) & 0xff
 
 '''
 BOARD
@@ -197,40 +204,40 @@ BOARD
 
 board_make_lib = lib.board_make
 board_make_lib.argtypes = [c_char_p]
-board_make_lib.restype = POINTER(BOARD)
+board_make_lib.restype = BOARD_PTR_T
 
 board_copy_lib = lib.board_copy
-board_copy_lib.argtypes = [POINTER(BOARD)]
-board_copy_lib.restype = POINTER(BOARD)
+board_copy_lib.argtypes = [BOARD_PTR_T]
+board_copy_lib.restype = BOARD_PTR_T
 
 board_free_lib = lib.board_free
-board_free_lib.argtypes = [POINTER(BOARD)]
+board_free_lib.argtypes = [BOARD_PTR_T]
 
 board_apply_move_lib = lib.board_apply_move
-board_apply_move_lib.argtypes = [POINTER(BOARD), POINTER(MOVE)]
+board_apply_move_lib.argtypes = [BOARD_PTR_T, MOVE_T]
 
 board_get_moves_lib = lib.board_get_moves
-board_get_moves_lib.argtypes = [POINTER(BOARD)]
-board_get_moves_lib.restype = POINTER(ALST)
+board_get_moves_lib.argtypes = [BOARD_PTR_T]
+board_get_moves_lib.restype = ALST_PTR_T
 
 board_is_mate_lib = lib.board_is_mate
-board_is_mate_lib.argtypes = [POINTER(BOARD)]
+board_is_mate_lib.argtypes = [BOARD_PTR_T]
 board_is_mate_lib.restype = c_int
 
 board_is_stalemate_lib = lib.board_is_stalemate
-board_is_stalemate_lib.argtypes = [POINTER(BOARD)]
+board_is_stalemate_lib.argtypes = [BOARD_PTR_T]
 board_is_stalemate_lib.restype = c_int
 
 board_to_fen_lib = lib.board_to_fen
-board_to_fen_lib.argtypes = [POINTER(BOARD)]
+board_to_fen_lib.argtypes = [BOARD_PTR_T]
 board_to_fen_lib.restype = c_char_p
 
 board_to_tui_lib = lib.board_to_tui
-board_to_tui_lib.argtypes = [POINTER(BOARD)]
+board_to_tui_lib.argtypes = [BOARD_PTR_T]
 board_to_tui_lib.restype = c_char_p
 
 _board_hit_lib = lib._board_hit
-_board_hit_lib.argtypes = [POINTER(BOARD), c_int, c_int, c_int]
+_board_hit_lib.argtypes = [BOARD_PTR_T, c_int, c_int, c_int]
 _board_hit_lib.restype = c_int
 
 class Board:
@@ -282,10 +289,8 @@ class Board:
     future_board = self if in_place else Board.from_board(self._board)
     if isinstance(move, Move):
       board_apply_move_lib(future_board._board, move._move)
-    elif isinstance(move, MOVE_PTR_T):
-      board_apply_move_lib(future_board._board, move)
     elif isinstance(move, MOVE_T):
-      board_apply_move_lib(future_board._board, pointer(move))
+      board_apply_move_lib(future_board._board, move)
     else:
       raise TypeError('not a move %s' % move)
     return future_board
@@ -297,8 +302,8 @@ class Board:
     # don't expose alst_t for simplicity
     # convert to iterable instead
     alst = board_get_moves_lib(self._board)
-    moves = [Move.from_move(cast(alst_get_lib(alst, i), MOVE_PTR_T)) for i in range(alst.contents.len)]
-    alst_free_lib(alst, alst_move_free_func)
+    moves = [Move(MOVE_T(alst_get_lib(alst, i))) for i in range(alst.contents.len)]
+    alst_free_lib(alst, alst_NULL_free_func)
     return moves
 
   def is_mate(self):
@@ -339,13 +344,25 @@ class Board:
     '''
     return self._board
 
+  def ranks(self):
+    '''
+    Returns the underlying ranks array of the board
+    '''
+    return self._board.contents.ranks
+
+  def flags(self):
+    '''
+    Returns the underlying flags field of the board
+    '''
+    return self._board.contents.flags
+
 '''
 ALST
 '''
 
 alst_free_lib = lib.alst_free
 alst_free_func_type = CFUNCTYPE(None, c_void_p)
-alst_move_free_func = cast(move_free_lib, alst_free_func_type)
+alst_NULL_free_func = cast(None, alst_free_func_type)
 alst_free_lib.argtypes = [POINTER(ALST), alst_free_func_type]
 
 alst_get_lib = lib.alst_get

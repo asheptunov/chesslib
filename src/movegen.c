@@ -157,6 +157,20 @@ alst_t *board_get_moves(const board_t *board) {
     const pc_t king = FLAGS_BPLAYER(board->flags) ? BKING : WKING;
     size_t j = 0;  // end of kept portion
     for (size_t i = 0; i < ret->len; ++i) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t move = (move_t) alst_get(ret, i);
+        board_t *board_future = board_copy(board);
+        board_apply_move(board_future, move);
+        pos_t kingpos_future = (MVFROMPC(move) == king) ? MVTOPOS(move) : kingpos;
+        if (!_board_hit(board_future, kingpos_future / 8, kingpos_future % 8, player)) {  // king is not hit; keep
+            // swap ith and jth move
+            move_t tmp = (move_t) alst_get(ret, j);  // tmp = ar[j]
+            alst_put(ret, j, (void *) move);            // ar[j] = ar[i]
+            alst_put(ret, i, (void *) tmp);             // ar[i] = tmp
+            ++j;
+        } // else king is hit; forget this move (free)
+        board_free(board_future);
+#else
         move_t *move = (move_t *) alst_get(ret, i);
         board_t *board_future = board_copy(board);
         board_apply_move(board_future, move);
@@ -171,6 +185,7 @@ alst_t *board_get_moves(const board_t *board) {
             move_free(move);
         }
         board_free(board_future);
+#endif
     }
     ret->len = j;
 
@@ -209,19 +224,19 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
         && (((board->ranks[rk + 1] >> (offs * 4)) & 0xf) == NOPC)) {
             if (rk + 1 < 7) {
                 // add single up move (WPAWN topc)
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WPAWN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WPAWN, NOPC));
             } else {  // topc is promotion
                 // add PROMOTION up moves
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WKNIGHT, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WBISHOP, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WROOK, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WQUEEN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WKNIGHT, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WBISHOP, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WROOK, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+1), NOPOS, WPAWN, WQUEEN, NOPC));
             }
             if (rk == 1
             && ISPOS2(rk + 2, offs)
             && (((board->ranks[rk + 2] >> (offs * 4)) & 0xf) == NOPC)) {
                 // add double up move
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk+2), NOPOS, WPAWN, WPAWN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk+2), NOPOS, WPAWN, WPAWN, NOPC));
             }
         }
 
@@ -231,13 +246,13 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
             if (killpc >= BPAWN && killpc <= BKING) {  // is black piece
                 if (rk + 1 < 7) {
                     // add up left diagonal take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WPAWN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WPAWN, killpc));
                 } else {  // killpos/topos is promotion
                     // add up left diagonal promotion take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WKNIGHT, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WBISHOP, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WROOK, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WQUEEN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WKNIGHT, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WBISHOP, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WROOK, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk+1), POS2(offs-1, rk+1), WPAWN, WQUEEN, killpc));
                 }
             }
         }
@@ -246,13 +261,13 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
             if (killpc >= BPAWN && killpc <= BKING) {  // is black piece
                 if (rk + 1 < 7) {
                     // add up right diagonal take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WPAWN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WPAWN, killpc));
                 } else {  // killpos/topos is promotion
                     // add up right diagonal promotion take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WKNIGHT, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WBISHOP, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WROOK, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WQUEEN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WKNIGHT, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WBISHOP, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WROOK, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk+1), POS2(offs+1,rk+1), WPAWN, WQUEEN, killpc));
                 }
             }
         }
@@ -263,7 +278,7 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
         && ((ISPOS2(rk+1, offs-1) && eppos == POS2(offs - 1, rk + 1))
          || (ISPOS2(rk+1, offs+1) && eppos == POS2(offs + 1, rk + 1)))) {
             // add ep up take
-            alst_append(dest, move_make(POS2(offs, rk), eppos, eppos - 8, WPAWN, WPAWN, BPAWN));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), eppos, eppos - 8, WPAWN, WPAWN, BPAWN));
         }
 
     } else {  // BLACK; moves go DOWN in rank
@@ -274,19 +289,19 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
         && (((board->ranks[rk - 1] >> (offs * 4)) & 0xf) == NOPC)) {
             if (rk - 1 > 0) {
                 // add single down move (BPAWN topc)
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BPAWN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BPAWN, NOPC));
             } else {  // topc is promotion
                 // add PROMOTION down moves
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BKNIGHT, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BBISHOP, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BROOK, NOPC));
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BQUEEN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BKNIGHT, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BBISHOP, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BROOK, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-1), NOPOS, BPAWN, BQUEEN, NOPC));
             }
             if (rk == 6
             && ISPOS2(rk - 2, offs)
             && (((board->ranks[rk - 2] >> (offs * 4)) & 0xf) == NOPC)) {
                 // add double down move
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs, rk-2), NOPOS, BPAWN, BPAWN, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs, rk-2), NOPOS, BPAWN, BPAWN, NOPC));
             }
         }
 
@@ -296,12 +311,12 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
             if (killpc <= WKING) {  // is white piece
                 if (rk - 1 > 0) {
                     // add down left diagonal take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BPAWN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BPAWN, killpc));
                 } else {  // killpos/topos is promotion
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BKNIGHT, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BBISHOP, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BROOK, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BQUEEN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BKNIGHT, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BBISHOP, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BROOK, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-1, rk-1), POS2(offs-1, rk-1), BPAWN, BQUEEN, killpc));
                 }
             }
         }
@@ -310,12 +325,12 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
             if (killpc <= WKING) {  // is white piece
                 if (rk - 1 > 0) {
                     // add down right diagonal take
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BPAWN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BPAWN, killpc));
                 } else {  // killpos/topos is promotion
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BKNIGHT, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BBISHOP, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BROOK, killpc));
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BQUEEN, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BKNIGHT, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BBISHOP, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BROOK, killpc));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+1, rk-1), POS2(offs+1, rk-1), BPAWN, BQUEEN, killpc));
                 }
             }
         }
@@ -326,7 +341,7 @@ void _board_generatePawnMoves(const board_t *board, alst_t *dest, const int rk, 
         && ((ISPOS2(rk-1, offs-1) && eppos == POS2(offs - 1, rk - 1))
          || (ISPOS2(rk-1, offs+1) && eppos == POS2(offs + 1, rk - 1)))) {
             // add ep down take
-            alst_append(dest, move_make(POS2(offs, rk), eppos, eppos + 8, BPAWN, BPAWN, WPAWN));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), eppos, eppos + 8, BPAWN, BPAWN, WPAWN));
         }
     }
 }
@@ -341,10 +356,10 @@ void _board_generateKnightMoves(const board_t *board, alst_t *dest, const int rk
             killpc = (board->ranks[rk + mv.dx] >> ((offs + mv.dy) * 4)) & 0xf;
             if (killpc == NOPC) {
                 // just a knight move
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), NOPOS, frompc, frompc, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), NOPOS, frompc, frompc, NOPC));
             } else if ((killpc / 6) != (frompc / 6)) {  // pc is different color
                 // knight capture
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), POS2(offs+mv.dy, rk+mv.dx), frompc, frompc, killpc));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), POS2(offs+mv.dy, rk+mv.dx), frompc, frompc, killpc));
             }
         }
     }
@@ -359,10 +374,10 @@ void _board_generateBishopMoves(const board_t *board, alst_t *dest, const int rk
             if (ISPOS2(rk + CUR_BISHOP_MOVE.dx, offs + CUR_BISHOP_MOVE.dy)) {  // in bounds
                 killpc = (board->ranks[rk+CUR_BISHOP_MOVE.dx] >> ((offs+CUR_BISHOP_MOVE.dy) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal bishop move
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), NOPOS, frompc, frompc, NOPC));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the diagonal
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), frompc, frompc, killpc));
+                        alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), POS2(offs+CUR_BISHOP_MOVE.dy, rk+CUR_BISHOP_MOVE.dx), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill diagonal if encountered another piece
                 }
@@ -382,10 +397,10 @@ void _board_generateRookMoves(const board_t *board, alst_t *dest, const int rk, 
             if (ISPOS2(rk + CUR_ROOK_MOVE.dx, offs + CUR_ROOK_MOVE.dy)) {  // in bounds
                 killpc = (board->ranks[rk+CUR_ROOK_MOVE.dx] >> ((offs+CUR_ROOK_MOVE.dy) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal rook move
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), NOPOS, frompc, frompc, NOPC));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the lateral
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), frompc, frompc, killpc));
+                        alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), POS2(offs+CUR_ROOK_MOVE.dy, rk+CUR_ROOK_MOVE.dx), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill lateral if encountered another piece
                 }
@@ -405,10 +420,10 @@ void _board_generateQueenMoves(const board_t *board, alst_t *dest, const int rk,
             if (ISPOS2(rk + CUR_QUEEN_MOVE.dx, offs + CUR_QUEEN_MOVE.dy)) {  // in bounds
                 killpc = (board->ranks[rk+CUR_QUEEN_MOVE.dx] >> ((offs+CUR_QUEEN_MOVE.dy) * 4)) & 0xf;
                 if (killpc == NOPC) {  // normal queen move
-                    alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), NOPOS, frompc, frompc, NOPC));
+                    alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), NOPOS, frompc, frompc, NOPC));
                 } else {  // kill the lat / diag
                     if ((killpc / 6) != (frompc / 6)) {  // capture
-                        alst_append(dest, move_make(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), frompc, frompc, killpc));
+                        alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), POS2(offs+CUR_QUEEN_MOVE.dy, rk+CUR_QUEEN_MOVE.dx), frompc, frompc, killpc));
                     }
                     j = 7;  // unconditionally kill lat / diag if encountered another piece
                 }
@@ -430,10 +445,10 @@ void _board_generateKingMoves(const board_t *board, alst_t *dest, const int rk, 
             killpc = (board->ranks[rk + mv.dx] >> ((offs + mv.dy) * 4)) & 0xf;
             if (killpc == NOPC) {
                 // just a king move
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), NOPOS, frompc, frompc, NOPC));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), NOPOS, frompc, frompc, NOPC));
             } else if ((killpc / 6) != (frompc / 6)) {  // pc is different color
                 // king capture
-                alst_append(dest, move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), POS2(offs+mv.dy, rk+mv.dx), frompc, frompc, killpc));
+                alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+mv.dy, rk+mv.dx), POS2(offs+mv.dy, rk+mv.dx), frompc, frompc, killpc));
             }
         }
     }
@@ -447,7 +462,7 @@ void _board_generateKingMoves(const board_t *board, alst_t *dest, const int rk, 
         && !_board_hit(board, rk, offs, 0)       // king not in check
         && !_board_hit(board, rk, offs+1, 0)) {  // f1 not hit
 //        && !hit(rk, offs+2, false)) {  // g1 not hit
-            alst_append(dest, move_make(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
         if (FLAGS_WQCASTLE(board->flags)  // white queenside
@@ -457,7 +472,7 @@ void _board_generateKingMoves(const board_t *board, alst_t *dest, const int rk, 
         && !_board_hit(board, rk, offs, 0)       // king not in check
         && !_board_hit(board, rk, offs-1, 0)) {  // d1 not hit
 //        && !hit(rk, offs-2, false)) {  // c1 not hit
-            alst_append(dest, move_make(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
     } else {  // black
@@ -468,7 +483,7 @@ void _board_generateKingMoves(const board_t *board, alst_t *dest, const int rk, 
         && !_board_hit(board, rk, offs, 1)       // king not in check
         && !_board_hit(board, rk, offs+1, 1)) {  // f8 not hit
 //        && !hit(rk, offs+2, true)) {  // g8 not hit
-            alst_append(dest, move_make(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs+2, rk), NOPOS, frompc, frompc, NOPC));
         }
 
         if (FLAGS_BQCASTLE(board->flags)  // black queenside
@@ -478,7 +493,7 @@ void _board_generateKingMoves(const board_t *board, alst_t *dest, const int rk, 
         && !_board_hit(board, rk, offs, 1)       // king not in check
         && !_board_hit(board, rk, offs-1, 1)) {  // d8 not hit
 //        && !hit(rk, offs-2, true)) {  // c8 not hit
-            alst_append(dest, move_make(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
+            alst_append(dest, (void *) move_make(POS2(offs, rk), POS2(offs-2, rk), NOPOS, frompc, frompc, NOPC));
         }
     }
 }

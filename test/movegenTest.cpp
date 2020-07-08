@@ -62,9 +62,17 @@ static map<string, map<uint8_t, vector<bool>>> hitCases =
       {POS('e', 8), {false, true}},  {POS('f', 8), {false, true}},  {POS('g', 8), {false, true}}, {POS('h', 8), {false, false}}}}
    };
 
+#ifdef CHESSLIB_QWORD_MOVE
+string printMoveVec(const vector<move_t> &moves);
+#else
 string printMoveVec(const vector<move_t *> &moves);
+#endif
 
+#ifdef CHESSLIB_QWORD_MOVE
+string printMoveVec(const vector<move_t> &moves) {
+#else
 string printMoveVec(const vector<move_t *> &moves) {
+#endif
    string ret;
    char *str;
    for (const auto &mv : moves) {
@@ -77,23 +85,41 @@ string printMoveVec(const vector<move_t *> &moves) {
 
 TEST(BoardMoveGenTest, MoveList) {
    for (auto it = genCases.begin(); it != genCases.end(); ++it) {
-      char moves[it->second.size()];
+      char *moves = new char[it->second.size() + 1];
       strcpy(moves, it->second.c_str());
+#ifdef CHESSLIB_QWORD_MOVE
+      vector<move_t> expect;
+#else
       vector<move_t *> expect;
+#endif
       char *move = strtok(moves, "\t");
       while (move) {
          expect.push_back(move_make_algnot(move));
          move = strtok(NULL, "\t");
       }
+      delete[] moves;
       board_t *b = board_make(it->first.c_str());
       alst_t *actual_ = board_get_moves(b);
+#ifdef CHESSLIB_QWORD_MOVE
+      vector<move_t> actual;
+#else
       vector<move_t *> actual;
+#endif
       for (size_t i = 0; i < actual_->len; ++i) {
+#ifdef CHESSLIB_QWORD_MOVE
+         actual.push_back((move_t) alst_get(actual_, i));
+#else
          actual.push_back((move_t *) alst_get(actual_, i));
+#endif
       }
 
+#ifdef CHESSLIB_QWORD_MOVE
+      std::sort(actual.begin(), actual.end(), [](const move_t a, const move_t b) {return move_cmp(a, b) < 0;});
+      std::sort(expect.begin(), expect.end(), [](const move_t a, const move_t b) {return move_cmp(a, b) < 0;});
+#else
       std::sort(actual.begin(), actual.end(), [](const move_t *a, const move_t *b) {return move_cmp(a, b) < 0;});
       std::sort(expect.begin(), expect.end(), [](const move_t *a, const move_t *b) {return move_cmp(a, b) < 0;});
+#endif
       const string actualStr = printMoveVec(actual);
       const string expectStr = printMoveVec(expect);
 
@@ -102,7 +128,11 @@ TEST(BoardMoveGenTest, MoveList) {
          << std::endl << "\tExp" << expectStr;
 
       if ((actual.size() != expect.size()) || actual.size() == 0) {
+#ifdef CHESSLIB_QWORD_MOVE
+         alst_free(actual_, NULL);
+#else
          alst_free(actual_, (void (*) (void *)) move_free);
+#endif
          board_free(b);
          continue;
       }
@@ -111,8 +141,13 @@ TEST(BoardMoveGenTest, MoveList) {
          << std::endl << "\tGot" << actualStr
          << std::endl << "\tExp" << expectStr;
 
+#ifdef CHESSLIB_QWORD_MOVE
+      move_t m1;
+      move_t m2;
+#else
       move_t *m1;
       move_t *m2;
+#endif
       char ms1[16];
       char ms2[16];
       for (size_t i = 0; i < actual.size(); ++i) {
@@ -121,6 +156,14 @@ TEST(BoardMoveGenTest, MoveList) {
          strcpy(ms1, move_str(m1));
          strcpy(ms2, move_str(m2));
          EXPECT_EQ(strcmp(ms1, ms2), 0) << "Move diff; got " << ms1 << " but expected " << ms2;
+#ifdef CHESSLIB_QWORD_MOVE
+         EXPECT_EQ(MVFROMPOS(m1), MVFROMPOS(m2));
+         EXPECT_EQ(MVFROMPC(m1),  MVFROMPC(m2));
+         EXPECT_EQ(MVTOPOS(m1),   MVTOPOS(m2));
+         EXPECT_EQ(MVTOPC(m1),    MVTOPC(m2));
+         EXPECT_EQ(MVKILLPOS(m1), MVKILLPOS(m2));
+         EXPECT_EQ(MVKILLPC(m1),  MVKILLPC(m2));
+#else
          EXPECT_EQ(m1->frompos, m2->frompos);
          EXPECT_EQ(m1->frompc, m2->frompc);
          EXPECT_EQ(m1->topos, m2->topos);
@@ -128,9 +171,13 @@ TEST(BoardMoveGenTest, MoveList) {
          EXPECT_EQ(m1->killpos, m2->killpos);
          EXPECT_EQ(m1->killpc, m2->killpc);
          free(expect[i]);
+#endif
       }
-
+#ifdef CHESSLIB_QWORD_MOVE
+      alst_free(actual_, NULL);
+#else
       alst_free(actual_, (void (*) (void *)) move_free);
+#endif
       board_free(b);
    }
 }

@@ -91,6 +91,16 @@ static void clrRes() {
     KILLPC = 0;
 }
 
+#ifdef CHESSLIB_QWORD_MOVE
+int algnot_parse(const char *str, move_t *move) {
+    clrRes();
+    YY_BUFFER_STATE bs = yy_scan_string(str);  // parse
+    yylex();
+    yy_delete_buffer(bs);  // cleanup
+    *move = MVMAKE(FROMPOS, TOPOS, KILLPOS, FROMPC, TOPC, KILLPC);
+    return !MATCHED;
+}
+#else
 int algnot_parse(const char *str, move_t *move) {
     clrRes();
     YY_BUFFER_STATE bs = yy_scan_string(str);  // parse
@@ -104,3 +114,4 @@ int algnot_parse(const char *str, move_t *move) {
     move->killpc = KILLPC;
     return !MATCHED;
 }
+#endif

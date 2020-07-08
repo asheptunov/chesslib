@@ -27,8 +27,8 @@ class TestMemoryLeaks(unittest.TestCase):
     def test_movegen_memory_leaks(self):
         self.leak_check(os.path.join(os.path.split(os.path.dirname(__file__))[0], 'bin', 'movegenTest'))
 
-    def test_perft_memory_leaks(self):
-        self.leak_check(os.path.join(os.path.split(os.path.dirname(__file__))[0], 'bin', 'perftTest'))
+    # def test_perft_memory_leaks(self):
+    #     self.leak_check(os.path.join(os.path.split(os.path.dirname(__file__))[0], 'bin', 'perftTest'))
 
 if __name__ == '__main__':
     unittest.main()

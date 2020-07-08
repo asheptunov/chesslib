@@ -19,7 +19,7 @@ board_t *board_make(const char *fen) {
     size_t strmax = sizeof fencpy;
     const char *delim = " ";
     char *next_token;
-    strcpy_s(fencpy, sizeof fencpy, fen);  // mutability
+    strcpy_s(fencpy, strmax, fen);  // mutability
     char *board_p = strtok_s(fencpy, &strmax, delim, &next_token);  // split off board data
     char *player_p = strtok_s(NULL, &strmax, delim, &next_token);  // split off player data
     char *castling_p = strtok_s(NULL, &strmax, delim, &next_token);  // split off castling data
@@ -102,15 +102,39 @@ void board_free(const board_t *other) {
     free((void *) other);
 }
 
+#ifdef CHESSLIB_QWORD_MOVE
+void board_apply_move(board_t *board, const move_t move) {
+#else
 void board_apply_move(board_t *board, const move_t *move) {
+#endif
     // kill the target piece if the move is a capture
     if (move_is_cap(move)) {
+#ifdef CHESSLIB_QWORD_MOVE
+        int k_rk = MVKILLPOS(move) / 8;
+        int k_offs = MVKILLPOS(move) % 8;
+#else
         int k_rk = move->killpos / 8;
         int k_offs = move->killpos % 8;
+#endif
         ZEROPOS(k_offs, board->ranks[k_rk]);
         SETPOS(k_offs, board->ranks[k_rk], NOPC);
 
         // update castling rights / bits if killed piece was an opponent's rook that could've castled
+#ifdef CHESSLIB_QWORD_MOVE
+        if (MVKILLPC(move) == WROOK) {
+            if (MVKILLPOS(move) == POS('a', 1)) {
+                ZEROCASTLE2(board->flags, WQCASTLE);
+            } else if (MVKILLPOS(move) == POS('h', 1)) {
+                ZEROCASTLE2(board->flags, WKCASTLE);
+            }
+        } else if (MVKILLPC(move) == BROOK) {
+            if (MVKILLPOS(move) == POS('a', 8)) {
+                ZEROCASTLE2(board->flags, BQCASTLE);
+            } else if (MVKILLPOS(move) == POS('h', 8)) {
+                ZEROCASTLE2(board->flags, BKCASTLE);
+            }
+        }
+#else
         if (move->killpc == WROOK) {
             if (move->killpos == POS('a', 1)) {
                 ZEROCASTLE2(board->flags, WQCASTLE);
@@ -124,14 +148,23 @@ void board_apply_move(board_t *board, const move_t *move) {
                 ZEROCASTLE2(board->flags, BKCASTLE);
             }
         }
+#endif
     }
 
     // move the piece
+#ifdef CHESSLIB_QWORD_MOVE
+    int f_rk = MVFROMPOS(move) / 8;
+    int t_rk = MVTOPOS(move) / 8;
+    int f_offs = MVFROMPOS(move) % 8;
+    int t_offs = MVTOPOS(move) % 8;
+    MOVEPC(f_offs, t_offs, board->ranks[f_rk], board->ranks[t_rk], MVTOPC(move));
+#else
     int f_rk = move->frompos / 8;
     int t_rk = move->topos / 8;
     int f_offs = move->frompos % 8;
     int t_offs = move->topos % 8;
     MOVEPC(f_offs, t_offs, board->ranks[f_rk], board->ranks[t_rk], move->topc);
+#endif
 
     // also move the rook if castling
     switch (move_is_castle(move)) {
@@ -147,6 +180,34 @@ void board_apply_move(board_t *board, const move_t *move) {
     }
 
     // update castling rights / bits if castled or made a move that voids castling
+#ifdef CHESSLIB_QWORD_MOVE
+    switch (MVFROMPC(move)) {
+        case WROOK: {
+            if (MVFROMPOS(move) == POS('a', 1)) {
+                ZEROCASTLE2(board->flags, WQCASTLE);
+            } else if (MVFROMPOS(move) == POS('h', 1)) {
+                ZEROCASTLE2(board->flags, WKCASTLE);
+            }
+            break;
+        }
+        case WKING:
+            ZEROCASTLE2(board->flags, WKCASTLE);
+            ZEROCASTLE2(board->flags, WQCASTLE);
+            break;
+        case BROOK: {
+            if (MVFROMPOS(move) == POS('a', 8)) {
+                ZEROCASTLE2(board->flags, BQCASTLE);
+            } else if (MVFROMPOS(move) == POS('h', 8)) {
+                ZEROCASTLE2(board->flags, BKCASTLE);
+            }
+            break;
+        }
+        case BKING:
+            ZEROCASTLE2(board->flags, BKCASTLE);
+            ZEROCASTLE2(board->flags, BQCASTLE);
+            break;
+    }
+#else
     switch (move->frompc) {
         case WROOK: {
             if (move->frompos == POS('a', 1)) {
@@ -173,24 +234,40 @@ void board_apply_move(board_t *board, const move_t *move) {
             ZEROCASTLE2(board->flags, BQCASTLE);
             break;
     }
+#endif
 
     // disable en passant rights / bits unless made a move that allows en passant
     SETEP(NOPOS, board->flags);
+#ifdef CHESSLIB_QWORD_MOVE
+    if ((MVFROMPC(move) == WPAWN || MVFROMPC(move) == BPAWN) \
+        && (abs(MVTOPOS(move) - MVFROMPOS(move)) == 16)) {
+        SETEP((MVFROMPOS(move) + MVTOPOS(move)) / 2, board->flags);
+    }
+#else
     if ((move->frompc == WPAWN || move->frompc == BPAWN) \
         && (abs(move->topos - move->frompos) == 16)) {
         SETEP((move->frompos + move->topos) / 2, board->flags);
     }
+#endif
 
     // flip players
     int player = FLAGS_WPLAYER(board->flags) ? BPLAYER : WPLAYER;
     SETPLAYER(player, board->flags);
 
     // update king position if a king moved
+#ifdef CHESSLIB_QWORD_MOVE
+    if (MVFROMPC(move) == WKING) {
+        SETWKING(MVTOPOS(move), board->flags);
+    } else if (MVFROMPC(move) == BKING) {
+        SETBKING(MVTOPOS(move), board->flags);
+    }
+#else
     if (move->frompc == WKING) {
         SETWKING(move->topos, board->flags);
     } else if (move->frompc == BKING) {
         SETBKING(move->topos, board->flags);
     }
+#endif
 
     // update Zobrist signature
     // TODO:
@@ -208,7 +285,11 @@ int board_is_mate(const board_t *board) {
     int ret = 0;
     alst_t *moves = board_get_moves(board);
     ret = moves->len == 0;  // in check and no moves -> mate
+#ifdef CHESSLIB_QWORD_MOVE
+    alst_free(moves, NULL);
+#else
     alst_free(moves, (void (*) (void *)) move_free);
+#endif
     return ret;
 }
 
@@ -287,7 +368,11 @@ int board_is_stalemate(const board_t *board) {
     int ret = 0;
     alst_t *moves = board_get_moves(board);
     ret = moves->len == 0;  // not in check and no moves -> stalemate
+#ifdef CHESSLIB_QWORD_MOVE
+    alst_free(moves, NULL);
+#else
     alst_free(moves, (void (*) (void *)) move_free);
+#endif
     return ret;
 }
 

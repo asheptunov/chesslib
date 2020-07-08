@@ -14,13 +14,13 @@ GTEST_LIBS = $(GTEST_LIB)/libgtest.a      \
 # ------------------------
 
 C = gcc
-CFLAGS = -g -Wall -Wextra -std=c11 -D_XOPEN_SOURCE=700 -fPIC
+CFLAGS = -g -Wall -Wextra -std=c11 -D_XOPEN_SOURCE=700 -DCHESSLIB_QWORD_MOVE -fPIC
 CPROD = -O3 -DCHESSLIB_PROD
 CTEST = -g -O1
 
 CXX = g++
 CPPFLAGS = -isystem $(GTEST_HDR)
-CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O0
+CXXFLAGS = -g -Wall -Wextra -pthread -std=c++11 -O0 -DCHESSLIB_QWORD_MOVE
 
 # --------------------------
 # >>>> LEXER PROPERTIES <<<<
@@ -184,7 +184,7 @@ bin/arraylistTest: build/src/test/arraylist.o build/test/arraylistTest.o $(GTEST
 bin/movegenTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/perftTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/perftTest.o $(GTEST_LIBS)
+bin/perftTest: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o build/test/perftTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
 bin/libchess.a: build/src/prod/parseutils.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o

@@ -35,6 +35,15 @@ static map<vector<int>, vector<string>> rawCases =
 
 TEST(MoveTest, ValConstruct) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(MVFROMPOS(m), it->first[0]) << "diff at " << it->second[0];
+        EXPECT_EQ(MVTOPOS(m), it->first[1]) << "diff at " << it->second[0];
+        EXPECT_EQ(MVKILLPOS(m), it->first[2]) << "diff at " << it->second[0];
+        EXPECT_EQ(MVFROMPC(m), it->first[3]) << "diff at " << it->second[0];
+        EXPECT_EQ(MVTOPC(m), it->first[4]) << "diff at " << it->second[0];
+        EXPECT_EQ(MVKILLPC(m), it->first[5]) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(m->frompos, it->first[0]) << "diff at " << it->second[0];
         EXPECT_EQ(m->topos, it->first[1]) << "diff at " << it->second[0];
@@ -43,6 +52,7 @@ TEST(MoveTest, ValConstruct) {
         EXPECT_EQ(m->topc, it->first[4]) << "diff at " << it->second[0];
         EXPECT_EQ(m->killpc, it->first[5]) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
@@ -50,6 +60,23 @@ TEST(MoveTest, AlgNotConstruct) {
     char str1[16];
     char str2[16];
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m1 = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        move_t m2 = move_make_algnot(it->second[1].c_str());
+        EXPECT_EQ(MVFROMPOS(m1), MVFROMPOS(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(MVTOPOS(m1),   MVTOPOS(m2))   << "diff at " << it->second[0];
+        EXPECT_EQ(MVKILLPOS(m1), MVKILLPOS(m2)) << "diff at " << it->second[0];
+        EXPECT_EQ(MVFROMPC(m1),  MVFROMPC(m2))  << "diff at " << it->second[0];
+        EXPECT_EQ(MVTOPC(m1),    MVTOPC(m2))    << "diff at " << it->second[0];
+        EXPECT_EQ(MVKILLPC(m1),  MVKILLPC(m2))  << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_cap(m1),    move_is_cap(m2))    << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_ep(m1),     move_is_ep(m2))     << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_promo(m1),  move_is_promo(m2))  << "diff at " << it->second[0];
+        EXPECT_EQ(move_is_castle(m1), move_is_castle(m2)) << "diff at " << it->second[0];
+        strcpy(str1, move_str(m1));
+        strcpy(str2, move_str(m2));
+        EXPECT_EQ(strcmp(str1, str2), 0) << "diff at " << it->second[0];
+#else
         move_t *m1 = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         move_t *m2 = move_make_algnot(it->second[1].c_str());
         EXPECT_EQ(m1->frompos, m2->frompos) << "diff at " << it->second[0];
@@ -67,82 +94,124 @@ TEST(MoveTest, AlgNotConstruct) {
         EXPECT_EQ(strcmp(str1, str2), 0) << "diff at " << it->second[0];
         move_free(m1);
         move_free(m2);
+#endif
     }
 }
 
 TEST(MoveTest, IsCapture) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_cap(m), it->first[6]) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_cap(m), it->first[6]) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
 TEST(MoveTest, IsEnPassant) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_ep(m), it->first[7]) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_ep(m), it->first[7]) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
 TEST(MoveTest, IsPromotion) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_promo(m), it->first[8]) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_promo(m), it->first[8]) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
 TEST(MoveTest, CastleType) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        EXPECT_EQ(move_is_castle(m), it->first[9]) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         EXPECT_EQ(move_is_castle(m), it->first[9]) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
 TEST(MoveTest, Print) {
     for (auto it = rawCases.begin(); it != rawCases.end(); ++it) {
+#ifdef CHESSLIB_QWORD_MOVE
+        move_t m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
+        char *str = move_str(m);
+        EXPECT_EQ(strcmp(str, it->second[0].c_str()), 0) << "diff at " << it->second[0];
+#else
         move_t *m = move_make(it->first[0], it->first[1], it->first[2], it->first[3], it->first[4], it->first[5]);
         char *str = move_str(m);
         EXPECT_EQ(strcmp(str, it->second[0].c_str()), 0) << "diff at " << it->second[0];
         move_free(m);
+#endif
     }
 }
 
 TEST(MoveTest, LessThan) {
+#ifdef CHESSLIB_QWORD_MOVE
+    move_t m1 = move_make_algnot("Ke1e2");
+    move_t m2 = move_make_algnot("ke1e2");
+#else
     move_t *m1 = move_make_algnot("Ke1e2");
     move_t *m2 = move_make_algnot("ke1e2");
+#endif
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
+#ifndef CHESSLIB_QWORD_MOVE
     move_free(m1);
     move_free(m2);
+#endif
 
     m1 = move_make_algnot("Qe1e2");
     m2 = move_make_algnot("Ke1e2");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
+#ifndef CHESSLIB_QWORD_MOVE
     move_free(m1);
     move_free(m2);
+#endif
 
     m1 = move_make_algnot("Pe2e3");
     m2 = move_make_algnot("Pe2e4");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
+#ifndef CHESSLIB_QWORD_MOVE
     move_free(m1);
     move_free(m2);
+#endif
 
     m1 = move_make_algnot("rb2b5");
     m2 = move_make_algnot("rb3b5");
     ASSERT_TRUE(move_cmp(m1, m2) < 0);
     ASSERT_FALSE(move_cmp(m2, m1) < 0);
+#ifndef CHESSLIB_QWORD_MOVE
     move_free(m1);
     move_free(m2);
+#endif
 
     m1 = move_make_algnot("Na1b3");
     m2 = move_make_algnot("Na1b3");
     ASSERT_FALSE(move_cmp(m1, m2));
+#ifndef CHESSLIB_QWORD_MOVE
     move_free(m1);
     move_free(m2);
+#endif
 }

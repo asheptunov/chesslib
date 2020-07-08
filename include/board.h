@@ -31,7 +31,11 @@ void board_free(const board_t *other);
 /**
 * Applies a move to the board. The move must be valid.
 */
+#ifdef CHESSLIB_QWORD_MOVE
+void board_apply_move(board_t *board, const move_t move);
+#else
 void board_apply_move(board_t *board, const move_t *move);
+#endif
 
 /**
 * Returns an arraylist of all valid moves for the board.
