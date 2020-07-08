@@ -1,6 +1,8 @@
 # chesslib
 
-This is a bitboard-based chess state machine API written (mostly) in C. The intended use is for hosting chess bots.
+This is a bitboard-based chess state machine API written (mostly) in C. The intended use is for hosting, developing, and testing chess bots.
+The API is available as a link- and load-time C/C++ library, and includes a lightweight Python wrapper for ease of use and integration with
+Python-based machine learning libraries like Pytorch.
 
 ### Installation
 
