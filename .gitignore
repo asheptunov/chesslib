@@ -5,6 +5,7 @@ build/
 bin/
 log/
 data/
+release/
 
 .vscode
 .settings
@@ -12,3 +13,4 @@ data/
 .cproject
 
 *.pyc
+release*

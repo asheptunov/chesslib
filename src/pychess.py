@@ -84,6 +84,10 @@ move_str_lib = lib.move_str
 move_str_lib.argtypes = [MOVE_T]
 move_str_lib.restype = c_char_p
 
+move_algnot_lib = lib.move_algnot
+move_algnot_lib.argtypes = [MOVE_T]
+move_algnot_lib.restype = c_char_p
+
 class Move:
   def __init__(self, move):
     if isinstance(move, Move):
@@ -102,7 +106,10 @@ class Move:
       raise TypeError('not a move %s' % other)
 
   def __str__(self):
-    return move_str_lib(self._move).decode('ascii')
+    return self.to_str()
+
+  def __repr__(self):
+    return self.to_algnot()
 
   @classmethod
   def from_values(cls, frompos, topos, killpos, frompc, topc, killpc):
@@ -134,6 +141,19 @@ class Move:
       return cls(move_cpy_lib(move))
     else:
       raise TypeError('not a move %s' % move)
+
+  def to_str(self):
+    '''
+    Returns a lossy algebraic notation for the move.
+    '''
+    return move_str_lib(self._move).decode('ascii')
+
+  def to_algnot(self):
+    '''
+    Returns a lossless algebraic notation for the move;
+    Move can be recovered using Move.from_algnot(move.to_algnot()).
+    '''
+    return move_algnot_lib(self._move).decode('ascii')
 
   def is_cap(self):
     '''
@@ -252,6 +272,9 @@ class Board:
       raise TypeError('not a board %s' % board)
 
   def __str__(self):
+    return self.to_tui()
+
+  def __repr__(self):
     return self.to_fen()
 
   def __del__(self):
@@ -321,13 +344,14 @@ class Board:
 
   def to_fen(self):
     '''
-    Returns the FEN representation of the board, excluding the halfmove clock and fullmove number.
+    Returns the FEN representation of the board, excluding the halfmove clock and fullmove number;
+    The board can be recovered using Board.from_fen(board.to_fen()).
     '''
     return board_to_fen_lib(self._board).decode('ascii')
 
   def to_tui(self):
     '''
-    Returns a TUI representation of the board
+    Returns a TUI representation of the board.
     '''
     return board_to_tui_lib(self._board).decode('ascii')
 

@@ -10,7 +10,7 @@ There are three options for installing and building with this chess library.
 
 #### Method 1 (Recommended). Loading the library with Python 3.7+ on a Unix system
 
-Place `chess.py` and `pychess.ini` together in your project directory.
+Place `pychess.py` and `pychess.ini` together in your project directory.
 
 Point the `posix_path` option in `pychess.ini` to the fully-qualified path to `libchess.so`.
 
@@ -18,7 +18,7 @@ Point the `posix_path` option in `pychess.ini` to the fully-qualified path to `l
 
 #### Method 2. Loading the library with Python 3.7+ on a Windows system
 
-Place `chess.py` and `pychess.ini` together in your project directory.
+Place `pychess.py` and `pychess.ini` together in your project directory.
 
 Point the `nt_path` option in `pychess.ini` to the fully-qualified path to `libchess.dll`.
 
@@ -40,7 +40,7 @@ Link your C/C++ project files with gcc using `-L {lib_dir} -lchess`.
 as memory leaks can cause severe performance issues when generating huge amounts of board positions for bots.*
 
 *Note: if the performance of your chess library is your bottleneck, linking with `libchess.a` is the recommended
-option, and can often result in a tenfold performance increase in Perft over `chess.py`.*
+option, and can often result in a tenfold performance increase in Perft over `pychess.py`.*
 
 ---
 

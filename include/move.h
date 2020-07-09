@@ -120,12 +120,26 @@ int move_is_castle(const move_t *move);
 #endif
 
 /**
-* Returns the (extended) algebraic notation for the move. The move
-* can be fully restored (duplicated) using move_make_algnot(move_str(move)).
+* Returns the (lossy) algebraic notation for the move.
 * Data in the returned buffer persists up to the next call.
+* Note: this move string is a compressed (lossy) notation for the move,
+* and cannot be used to recover a move. Should you need to serialize a move,
+* consider using its raw bytes, or printing it in lossless algebraic notation
+* using move_algnot(move).
 */
 #ifdef CHESSLIB_QWORD_MOVE
 char *move_str(const move_t move);
 #else
 char *move_str(const move_t *move);
+#endif
+
+/**
+* Returns the (lossless) algebraic notation for the move. The move can be
+* fully recovered from this notation using move_make_algnot(move_algnot(move)).
+* Data in the returned buffer persists up to the next call.
+*/
+#ifdef CHESSLIB_QWORD_MOVE
+char *move_algnot(const move_t move);
+#else
+char *move_algnot(const move_t *move);
 #endif

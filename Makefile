@@ -46,24 +46,24 @@ GTEST_FLAGS = --gtest_brief=1
 # >>>> TARGETS <<<<
 # -----------------
 
-UNIT_TESTS =bin/moveTest        \
-			bin/boardTest       \
-			bin/arraylistTest   \
-			bin/movegenTest
+UNIT_TESTS =bin/test/moveTest        \
+			bin/test/boardTest       \
+			bin/test/arraylistTest   \
+			bin/test/movegenTest
 
-SYSTEM_TESTS =  bin/perftTest     \
-				test/perftTest.py \
+SYSTEM_TESTS =  bin/test/perftTest \
+				test/perftTest.py  \
 				test/memTest.py
 
-LIBA =  bin/libchess.a
-LIBSO = bin/libchess.so
-LIBDLL = bin/libchess.dll
+LIBA =  bin/lib/libchess.a
+LIBSO = bin/lib/libchess.so
+LIBDLL = bin/lib/libchess.dll
 
 unittest: $(UNIT_TESTS)
 	@echo `echo $^ | sed -r 's/\s/ $(GTEST_FLAGS) ; /g'` $(GTEST_FLAGS) | sh
 
 systemtest: $(SYSTEM_TESTS)
-	bin/perftTest ; $(PY) $(PYTEST_FLAGS) test.perftTest test.memTest
+	bin/test/perftTest ; $(PY) $(PYTEST_FLAGS) test.perftTest test.memTest
 
 test: unittest systemtest
 
@@ -75,7 +75,7 @@ libdll: $(LIBDLL)
 
 all: libso unittest systemtest
 
-.PHONY: clean
+.PHONY: all test clean release-clean release
 
 clean:
 	find bin   -type f -name '*.a' -delete -o -name '*.so' -delete -o -name '*.dll' -delete -o -name '*Test' -delete ; \
@@ -89,10 +89,9 @@ init:
 	@if [ -d "googletest" ]; then rm -Rf googletest; fi
 	@if [ -d "log" ]; then rm -Rf log; fi
 	@make clean
-	@mkdir bin
-	@mkdir lib
-	@mkdir lib/googletest $(GTEST_HDR) $(GTEST_LIB)
-	@mkdir build build/src build/src/prod build/src/test build/test
+	@mkdir -p bin/lib bin/test
+	@mkdir -p $(GTEST_HDR) $(GTEST_LIB)
+	@mkdir -p build/src/prod build/src/test build/test
 	@mkdir log
 	@echo "fetching dependencies..."
 	@ROOTDIR=$(pwd)
@@ -101,6 +100,34 @@ init:
 	@cd $(ROOTDIR)
 	@rm -rf googletest
 	@echo "done"
+
+release-clean:
+	@rm -rf release
+
+release-win:
+	@make clean libdll
+	@mkdir -p release/lib
+	@cp bin/lib/libchess.dll release/lib/libchess.dll
+
+release-unix:
+	@make clean liba libso
+	@mkdir -p release/lib
+	@cp bin/lib/libchess.a release/lib/libchess.a
+	@cp bin/lib/libchess.so release/lib/libchess.so
+
+release:
+	@mkdir -p release/include
+	@cp include/* release/include/
+	@cp src/pychess.py release/
+	@printf "[libchess]\nposix_path = lib/libchess.so\nnt_path = lib\libchess.dll\n" > release/pychess.ini
+	@cp LICENSE release/
+	@cp README.md release/
+
+release-zip:
+	@zip -r release.zip release
+
+release-tar-gz:
+	@tar -czf release.tar.gz release
 
 # -------------------
 # >>>> C RECIPES <<<<
@@ -172,26 +199,26 @@ build/test/perftTest.o: test/perftTest.cpp include
 # >>>> BINARY RECIPES <<<<
 # ------------------------
 
-bin/moveTest: build/src/test/parseutils.o build/src/test/move.o build/src/test/algnot.o build/test/moveTest.o $(GTEST_LIBS)
+bin/test/moveTest: build/src/test/parseutils.o build/src/test/move.o build/src/test/algnot.o build/test/moveTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/boardTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/boardTest.o $(GTEST_LIBS)
+bin/test/boardTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/boardTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/arraylistTest: build/src/test/arraylist.o build/test/arraylistTest.o $(GTEST_LIBS)
+bin/test/arraylistTest: build/src/test/arraylist.o build/test/arraylistTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/movegenTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/movegenTest.o $(GTEST_LIBS)
+bin/test/movegenTest: build/src/test/parseutils.o build/src/test/arraylist.o build/src/test/move.o build/src/test/algnot.o build/src/test/board.o build/src/test/movegen.o build/test/movegenTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/perftTest: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o build/test/perftTest.o $(GTEST_LIBS)
+bin/test/perftTest: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o build/test/perftTest.o $(GTEST_LIBS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -L $(GTEST_LIB) -lgtest_main -lpthread $^ -o $@
 
-bin/libchess.a: build/src/prod/parseutils.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
+bin/lib/libchess.a: build/src/prod/parseutils.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(AR) $(ARFLAGS) $@ $^
 
-bin/libchess.so: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
+bin/lib/libchess.so: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@
 
-bin/libchess.dll: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
+bin/lib/libchess.dll: build/src/prod/parseutils.o build/src/prod/arraylist.o build/src/prod/move.o build/src/prod/algnot.o build/src/prod/board.o build/src/prod/movegen.o
 	$(C) $(CFLAGS) $^ -shared -o $@

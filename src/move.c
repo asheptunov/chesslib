@@ -169,13 +169,13 @@ int move_is_castle(const move_t *move) {
 }
 #endif
 
+// lossy algebraic
 #ifdef CHESSLIB_QWORD_MOVE
 char *move_str(const move_t move) {
 #else
 char *move_str(const move_t *move) {
 #endif
     static char ret[16];
-#ifndef CHESSLIB_PROD
     switch(move_is_castle(move)) {
         case WKCASTLE:
         case BKCASTLE:
@@ -194,11 +194,69 @@ char *move_str(const move_t *move) {
 #endif
             return ret;
     }
-# else
-# endif
     char *pos_str;
     ret[0] = '\0';
-#ifdef CHESSLIB_PROD
+#ifdef CHESSLIB_QWORD_MOVE
+    pos_str = pos_to_str(MVFROMPOS(move));
+#else
+    pos_str = pos_to_str(move->frompos);
+#endif
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, pos_str);
+#else
+    strcat(ret, pos_str);
+#endif
+    if (move_is_cap(move)) {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "x");
+#else
+        strcat(ret, "x");
+#endif
+    }
+#ifdef CHESSLIB_QWORD_MOVE
+    pos_str = pos_to_str(MVTOPOS(move));
+#else
+    pos_str = pos_to_str(move->topos);
+#endif
+#ifdef __STDC_LIB_EXT1__
+    strcat_s(ret, sizeof ret, pos_str);
+#else
+    strcat(ret, pos_str);
+#endif
+    if (move_is_ep(move)) {
+#ifdef __STDC_LIB_EXT1__
+        strcat_s(ret, sizeof ret, "e.p.");
+#else
+        strcat(ret, "e.p.");
+#endif
+    }
+    if (move_is_promo(move)) {
+#ifdef __STDC_LIB_EXT1__
+#ifdef CHESSLIB_QWORD_MOVE
+        strcat_s(ret, sizeof ret, piece_to_str(MVTOPC(move)));
+#else
+        strcat_s(ret, sizeof ret, piece_to_str(move->topc));
+#endif
+#else
+#ifdef CHESSLIB_QWORD_MOVE
+        strcat(ret, piece_to_str(MVTOPC(move)));
+#else
+        strcat(ret, piece_to_str(move->topc));
+#endif
+#endif
+    }
+    return ret;
+}
+
+// lossless algebraic (recoverable)
+#ifdef CHESSLIB_QWORD_MOVE
+char *move_algnot(const move_t move) {
+#else
+char *move_algnot(const move_t *move) {
+#endif
+    static char ret[16];
+    char *pos_str;
+    ret[0] = '\0';
 #ifdef __STDC_LIB_EXT1__
 #ifdef CHESSLIB_QWORD_MOVE
     strcat_s(ret, sizeof ret, piece_to_str(MVFROMPC(move)));
@@ -211,8 +269,6 @@ char *move_str(const move_t *move) {
 #else
     strcat(ret, piece_to_str(move->frompc));
 #endif
-#endif
-#else
 #endif
 #ifdef CHESSLIB_QWORD_MOVE
     pos_str = pos_to_str(MVFROMPOS(move));
@@ -231,21 +287,26 @@ char *move_str(const move_t *move) {
         strcat(ret, "x");
 #endif
     }
-#ifdef CHESSLIB_PROD
 #ifdef __STDC_LIB_EXT1__
 #ifdef CHESSLIB_QWORD_MOVE
-    strcat_s(ret, sizeof ret, piece_to_str(MVKILLPC(move)));
+    if (MVKILLPC(move) != NOPC) {
+        strcat_s(ret, sizeof ret, piece_to_str(MVKILLPC(move)));
+    }
 #else
-    strcat_s(ret, sizeof ret, piece_to_str(move->killpc));
+    if (move->killpc != NOPC) {
+        strcat_s(ret, sizeof ret, piece_to_str(move->killpc));
+    }
 #endif
 #else
 #ifdef CHESSLIB_QWORD_MOVE
-    strcat(ret, piece_to_str(MVKILLPC(move)));
+    if (MVKILLPC(move) != NOPC) {
+        strcat(ret, piece_to_str(MVKILLPC(move)));
+    }
 #else
-    strcat(ret, piece_to_str(move->killpc));
+    if (move->killpc != NOPC) {
+        strcat(ret, piece_to_str(move->killpc));
+    }
 #endif
-#endif
-#else
 #endif
 #ifdef CHESSLIB_QWORD_MOVE
     pos_str = pos_to_str(MVTOPOS(move));
